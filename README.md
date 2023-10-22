@@ -1,5 +1,5 @@
 # Independent Component Analysis (ICA) 
-Companion code to the project done for the MVA course [Probabilistic Graphical Model](https://lmbp.uca.fr/~latouche/mva/IntroductiontoProbabilisticGraphicalModelsMVA.html) on Independent Component Analysis.
+Companion code to the project done for the MVA course [Probabilistic Graphical Models](https://lmbp.uca.fr/~latouche/mva/IntroductiontoProbabilisticGraphicalModelsMVA.html) on Independent Component Analysis.
 
 ## Authors
 * Zineb Bentires (ENSAE, MVA)
