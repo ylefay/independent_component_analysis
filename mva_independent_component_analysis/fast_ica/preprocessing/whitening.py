@@ -8,6 +8,8 @@ def whitening(X):
     :return: whitened data matrix, i.e., with the identity matrix as covariance matrix, and the corresponding linear transformation
     """
     cov = jnp.cov(X)
+    if cov.shape == ():
+        cov = jnp.array([[cov]])
     eigenvalues, eigenvectors = jnp.linalg.eig(cov)
     eigenvalues = jnp.real(eigenvalues)
     eigenvectors = jnp.real(eigenvectors)

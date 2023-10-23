@@ -5,6 +5,10 @@ from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 import numpy.testing as npt
 
 def test_fastica():
+    """
+    Test the fast_ica function.
+    Just making sure it does not fail.
+    """
     JAX_KEY = jax.random.PRNGKey(1337)
     n_samples = 1000
     min_features = 2
@@ -18,8 +22,7 @@ def test_fastica():
     centred_X, _ = demeaning(X)
     whitened_X, _ = whitening(X)
 
-    W = fast_ica(whitened_X, X.shape[0]//2, 1e-5, jnp.tanh, 1000)
+    W = fast_ica(whitened_X, X.shape[0], 1e-5, jnp.tanh, 1000)
     S = W.T @ whitened_X
 
 
-test_fastica()
