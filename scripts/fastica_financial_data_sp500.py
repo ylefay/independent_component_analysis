@@ -20,7 +20,7 @@ returns = returns.to_numpy().T
 returns, m = demeaning(returns)
 whitened_returns, L = whitening(returns)
 # Running the fast_ica algorithm.
-W = fast_ica(whitened_returns, whitened_returns.shape[0], 1e-5, jnp.tanh, 1000)
+W = fast_ica(whitened_returns, whitened_returns.shape[0])
 # Computing the independent components.
 independent_components = m + jnp.linalg.inv(L) @ W.T @ whitened_returns
 # Plotting the independent components.

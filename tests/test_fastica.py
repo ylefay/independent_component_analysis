@@ -22,7 +22,7 @@ def test_fastica():
     centred_X, _ = demeaning(X)
     whitened_X, _ = whitening(X)
 
-    W = fast_ica(whitened_X, X.shape[0], 1e-5, jnp.tanh, 1000)
+    W = fast_ica(JAX_KEY, whitened_X, X.shape[0], 1e-5, jnp.tanh, 1000)
     S = W.T @ whitened_X
 
 

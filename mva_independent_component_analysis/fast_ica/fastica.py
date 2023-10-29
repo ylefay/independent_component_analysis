@@ -1,10 +1,8 @@
 import jax.numpy as jnp
 import jax
 
-JAX_KEY = jax.random.PRNGKey(1337)
 
-
-def fast_ica(X, n_components, tol=10 ** -2, fun=jnp.tanh, max_iter=10 ** 5):
+def fast_ica(op_key, X, n_components=None, tol=1e-2, fun=jnp.tanh, max_iter=10 ** 5):
     """
     FastICA algorithm for independent component analysis.
     :param X: data matrix of shape (n_features, n_samples)
@@ -15,6 +13,8 @@ def fast_ica(X, n_components, tol=10 ** -2, fun=jnp.tanh, max_iter=10 ** 5):
     :return: matrix of shape (n_features, n_components) containing the components
     """
     N, M = X.shape
+    if n_components is None:
+        n_components = N
 
     def fun_p(x):
         return jax.vmap(jax.grad(fun))(x)
@@ -23,9 +23,9 @@ def fast_ica(X, n_components, tol=10 ** -2, fun=jnp.tanh, max_iter=10 ** 5):
         step, diff, _ = args
         return (step < max_iter) & (diff > tol)
 
-    def iter_one_component(inp, key):
+    def iter_one_component(inp, key_i):
         component, W = inp
-        w_init = jax.random.uniform(key, (N,), minval=-1, maxval=1)
+        w_init = jax.random.uniform(key_i, (N,), minval=-1, maxval=1)
         w_init = w_init / jnp.linalg.norm(w_init)
 
         def iter(inps):
@@ -34,19 +34,19 @@ def fast_ica(X, n_components, tol=10 ** -2, fun=jnp.tanh, max_iter=10 ** 5):
             w = 1 / M * X @ fun(w.T @ X).T - 1 / M * fun_p(w.T @ X) @ jnp.ones((M,)) * w
 
             @jax.vmap
-            def summand(wj):
+            def op(wj):
                 return (w.T @ wj) * wj
 
-            sum = jnp.sum(summand(W.T), axis=0).reshape((N,)) #could be optimized..
+            sum = jnp.sum(op(W.T), axis=0).reshape((N,))  # could be optimized..
             w = w - sum
             w = w / jnp.linalg.norm(w)
             return step + 1, jnp.linalg.norm(w - old_w), w
 
         _, _, w = jax.lax.while_loop(cond, iter, (0, tol + 1, w_init))
         W = W.at[:, component].set(w.T)
-        return (component + 1, W), W
+        return (component + 1, W), None
 
-    keys = jax.random.split(JAX_KEY, n_components)
+    keys = jax.random.split(op_key, n_components)
     out, _ = jax.lax.scan(iter_one_component, (0, jnp.zeros((N, n_components))), keys)
     _, W = out
     return W
