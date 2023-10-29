@@ -22,7 +22,8 @@ setuptools.setup(
         "jaxlib>=0.3.25",
         "pytest",
         "numpy>=1.24.3",
-        "tqdm"
+        "tqdm",
+        "blackjax",
     ],
     long_description_content_type="text/markdown",
     keywords="probabilistic graphical models generative models component analysis variational autoencoder nonlinear model",
