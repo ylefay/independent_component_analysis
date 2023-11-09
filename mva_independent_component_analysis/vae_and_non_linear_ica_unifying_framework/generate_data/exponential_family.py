@@ -7,7 +7,7 @@ def logdensity_function_ef(z, u, T, A, L):
     univariate exponential distribution for each coordinate, i.e.,
     \pi(z\mid u) \coloneq \exp(\sum_{i=1}^d \sum_{j=1}^k T_{i,j}(z_i) L_{j,i}(u) - \sum_{i=1}^d A_j(u))
     for z scalar.
-    :param z: scalar latent variable
+    :param z: latent variable
     :param u: auxiliary variable
     :param T: sufficient statistics
     :param A: log-partition function
