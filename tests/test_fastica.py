@@ -4,6 +4,7 @@ from mva_independent_component_analysis.fast_ica.preprocessing import demeaning,
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 import numpy.testing as npt
 
+
 def test_fastica():
     """
     Test the fast_ica function.
@@ -24,5 +25,3 @@ def test_fastica():
 
     W = fast_ica(JAX_KEY, whitened_X, X.shape[0], 1e-5, jnp.tanh, 1000)
     S = W.T @ whitened_X
-
-
