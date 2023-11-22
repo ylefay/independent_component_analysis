@@ -5,6 +5,7 @@ import numpy.testing as npt
 
 
 def test_whitened_data():
+    # This test that the whitened data has the identity matrix as covariance matrix
     JAX_KEY = jax.random.PRNGKey(1337)
     n_samples = 1000
     min_features = 2

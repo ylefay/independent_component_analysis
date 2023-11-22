@@ -6,6 +6,7 @@ import numpy.testing as npt
 
 
 def test_sum_to_one_normal_univ():
+    # This test that the density of a univariate normal distribution sums to one
     JAX_KEY = jax.random.PRNGKey(1337)
     mu = jax.random.uniform(JAX_KEY, (1,), minval=-5, maxval=5)
     sigma = jax.random.uniform(JAX_KEY, (1,), minval=1,

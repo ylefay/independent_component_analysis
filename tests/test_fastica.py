@@ -43,24 +43,29 @@ def test_ica_identification(fast_ica_implementation):
     S = jnp.array([jnp.sin(ns * 1),
                    sawtooth(ns * 1.9),
                    jax.random.uniform(JAX_KEY, shape=(len(ns),))])
+    n_sources, n_samples = S.shape
     # Mixing process
     A = jnp.array([[0.5, 1, 0.2],
                    [1, 0.5, 0.4],
                    [0.5, 0.8, 1]])
     # Mixed signals
     X = A @ S
-    n_sources, n_samples = S.shape
-    n_signals = X.shape[0]
     # Whiten mixed signals
-    Xc, mean = demeaning(X)
-    Xw, whiteM = whitening(Xc)
-    W = fast_ica_implementation(op_key=JAX_KEY, X=Xw, n_components=Xw.shape[0], tol=1e-8, max_iter=5000)
+    X, mean = demeaning(X)
+    X, whiteM = whitening(X)
+    # Running ICA.
+    W = fast_ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=5000)
+    # Testing for orthogonality
     npt.assert_array_almost_equal(W @ W.T, jnp.identity(n_sources), decimal=2)
-    S_est = W.T @ Xw
+    # Estimated sources
+    S_est = W.T @ X
+    # For comparison purposes
     S, _ = demeaning(S)
     S, _ = whitening(S)
+    # Finding the permutation of the signals
     perm = jnp.argmax(jnp.abs(jnp.array([[S_est[i, :] @ S[j, :] for i in range(n_sources)] for j in range(n_sources)])),
                       axis=0)  # trick to find the permutation of the signals
+    # Test the ratio of the reconstructed signal to the original signals
     for i in range(n_sources):
         ratio = jnp.abs(S_est[i] / S[perm[i]])
         std = jnp.std(ratio)
