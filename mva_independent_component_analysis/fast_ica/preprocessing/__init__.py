@@ -1,2 +1,1 @@
-from .demeaning import demeaning
-from .whitening import whitening
+from .utils import demeaning, whitening

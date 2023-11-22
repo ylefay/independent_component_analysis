@@ -24,7 +24,3 @@ def test_sum_to_one_normal_univ():
     trapz = jnp.trapz(density(integration_linspace), integration_linspace, axis=0)
     npt.assert_almost_equal(trapz, 1, decimal=2)
 
-
-def test_parameters_multi_normal():
-    # This tests that the mean and the variance for exponential distributions are correctly recovered
-    raise NotImplementedError
