@@ -32,14 +32,14 @@ def super_or_sub_gaussian(x):
         """
         Supergaussian log probability of a single source x.
         Assumption:
-            log(p_i(x)) = alpha_2 - x^2/2 + log(cosh(x))
-            p_(x) = exp(alpha_2 - x^2/2 + log(cosh(x)))
+            log(p_i(x)) = alpha_2 - x^2/2 + 2 * ln(cosh(x))
+            p_(x) = exp(alpha_2 - x^2/2 + 2 * ln(cosh(x)))
         with alpha_2 = - ln(sqrt(2pi)) - 1/2
 
         :param x: an array of shape (n_samples, ), float.
 
         """
-        return jnp.logaddexp(x, -x) - jnp.log(jnp.sqrt(2 * jnp.pi)) - 1 / 2
+        return 2 * jnp.logaddexp(x, -x) - jnp.log(jnp.sqrt(2 * jnp.pi)) - 1 / 2
 
     def minus(x):
         g, dg = jax.value_and_grad(jax.grad(get_subgaussian_log_prob))(x)

@@ -63,7 +63,7 @@ def test_ica_identification(fast_ica_implementation):
     S, _ = demeaning(S)
     S, _ = whitening(S)
     # Finding the permutation of the signals
-    perm = jnp.argmax(jnp.abs(jnp.array([[S_est[i, :] @ S[j, :] for i in range(n_sources)] for j in range(n_sources)])),
+    perm = jnp.argmax(jnp.abs(S_est @ S.T),
                       axis=0)  # trick to find the permutation of the signals
     # Test the ratio of the reconstructed signal to the original signals
     for i in range(n_sources):
