@@ -49,7 +49,7 @@ def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
     if n_components is None:
         n_components = n_features
 
-    def compute_update_matrix(W):
+    def compute_update_matrix(X, W):
         S = W @ X
         id = jnp.eye(n_components, n_components)
         if prior is None:
@@ -65,19 +65,19 @@ def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
         step, _, update_matrix = args
         return (step < max_iter) & (jnp.linalg.norm(update_matrix, 'fro') > tol)
 
-    def update_loop(W):
-        def loop_body(carry):
-            step, W, old_update = carry
-            dW = compute_update_matrix(W)
-            new_matrix = W + learning_rate * dW
-            new_orthornormal_matrix, _ = jnp.linalg.qr(new_matrix)
-            return step + 1, new_orthornormal_matrix, dW
+    def newton_descent(W):
+        def iter(carry):
+            step, W, _ = carry
+            dW = compute_update_matrix(X, W)
+            W += learning_rate * dW
+            W, _ = jnp.linalg.qr(W)
+            return step + 1, W, dW
 
         dW0 = jnp.zeros_like(W)
-        _, final_matrix, final_update = lax.while_loop(cond, loop_body,
-                                                       (0, W, dW0))
-        return final_matrix
+        _, W, _ = lax.while_loop(cond, iter,
+                                 (0, W, dW0))
+        return W
 
     W0 = random_semiorthogonal_matrix(op_key, shape=(n_components, n_features))
-    W = update_loop(W0)
+    W = newton_descent(W0)
     return W
