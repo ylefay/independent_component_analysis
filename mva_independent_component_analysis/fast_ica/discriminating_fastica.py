@@ -28,8 +28,7 @@ def supergaussian(x):
 
 def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     """
-    Variation of the FastICA algorithm for independent component analysis,
-    Motivated by a MLE approach.
+    Variation of the FastICA algorithm for independent component analysis.
     The log-density g_i for the i-th source, s_i, is chosen depending on the
     estimated subgaussianity or supergaussianity of s_i.
 
@@ -39,9 +38,9 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     :param max_iter: maximum number of iterations for each component
     :return: matrix of shape (n_features, n_components) containing the components
     """
-    N, M = X.shape
+    n_features, n_samples = X.shape
     if n_components is None:
-        n_components = N
+        n_components = n_features
 
     def fun_funp(x):
         """
@@ -56,7 +55,7 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
         def minus(x):
             # g, dg = jax.value_and_grad(subgaussian)(x)
             # another criterion is x * g - dg > 0
-            return jnp.sum(x ** 4 - 3)  # we use the kurtosis to discriminate.
+            return jnp.mean(x ** 4) - 3  # we use the kurtosis to discriminate.
 
         return jax.lax.cond(minus(x) > 0,
                             jax.vmap(jax.value_and_grad(subgaussian)),
@@ -70,21 +69,21 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
 
     def iter_one_component(inp, key_i):
         component, W = inp
-        w_init = jax.random.uniform(key_i, (N,), minval=-1, maxval=1)
+        w_init = jax.random.uniform(key_i, (n_features,), minval=-1, maxval=1)
         w_init = w_init / jnp.linalg.norm(w_init)
 
         def iter(inps):
             step, diff, w = inps
             old_w = w
             fun_img, fun_p_img = fun_funp(w.T @ X)
-            w = 1 / M * X @ fun_img.T - 1 / M * fun_p_img @ jnp.ones(
-                (M,)) * w
+            w = 1 / n_samples * X @ fun_img.T - 1 / n_samples * fun_p_img @ jnp.ones(
+                (n_samples,)) * w
 
             @jax.vmap
             def op(wj):
                 return (w.T @ wj) * wj
 
-            sum = jnp.sum(op(W.T), axis=0).reshape((N,))  # could be optimized..
+            sum = jnp.sum(op(W.T), axis=0).reshape((n_features,))  # could be optimized..
             w = w - sum
             w = w / jnp.linalg.norm(w)
             return step + 1, jnp.linalg.norm(w - old_w), w
@@ -94,6 +93,6 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
         return (component + 1, W), None
 
     keys = jax.random.split(op_key, n_components)
-    out, _ = jax.lax.scan(iter_one_component, (0, jnp.zeros((N, n_components))), keys)
+    out, _ = jax.lax.scan(iter_one_component, (0, jnp.zeros((n_features, n_components))), keys)
     _, W = out
     return W

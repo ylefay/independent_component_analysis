@@ -1,19 +1,21 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.fast_ica.preprocessing import demeaning, whitening
+
+from mva_independent_component_analysis.fast_ica.preprocessing import centering_and_whitening
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
+from mva_independent_component_analysis.mle_ica.newton import newton_ica
 
 import numpy.testing as npt
 from scipy.signal import sawtooth
 import pytest
 from functools import partial
 
-FAST_ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica]  # test does not pass on mle_fast_ica.
+ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, newton_ica]  # test does not pass on mle_fast_ica.
 
 
-@pytest.mark.parametrize("fast_ica_implementation", FAST_ICAs)
-def test_fastica(fast_ica_implementation):
+@pytest.mark.parametrize("ica_implementation", ICAs)
+def test_fastica(ica_implementation):
     """
     Test the fast_ica function.
     Just making sure it does not fail.
@@ -28,14 +30,13 @@ def test_fastica(fast_ica_implementation):
     _, key_samples = jax.random.split(JAX_KEY, 2)
     X = jax.random.normal(key_samples, (n_features, n_samples))
 
-    centred_X, _ = demeaning(X)
-    whitened_X, _ = whitening(X)
-    W = fast_ica_implementation(op_key=JAX_KEY, X=whitened_X, n_components=X.shape[0], tol=1e-5, max_iter=1000)
-    S = W.T @ whitened_X
+    X, _, _ = centering_and_whitening(X)
+    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-5, max_iter=1000)
+    S = W.T @ X
 
 
-@pytest.mark.parametrize("fast_ica_implementation", FAST_ICAs)
-def test_ica_identification(fast_ica_implementation):
+@pytest.mark.parametrize("ica_implementation", ICAs)
+def test_ica_identification(ica_implementation):
     # Blind source separation problem (BSS)
     JAX_KEY = jax.random.PRNGKey(1337)
     ns = jnp.linspace(0, 200, 500)
@@ -51,17 +52,15 @@ def test_ica_identification(fast_ica_implementation):
     # Mixed signals
     X = A @ S
     # Whiten mixed signals
-    X, mean = demeaning(X)
-    X, whiteM = whitening(X)
+    X, meanX, whiteM = centering_and_whitening(X)
     # Running ICA.
-    W = fast_ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=5000)
+    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=5000)
     # Testing for orthogonality
     npt.assert_array_almost_equal(W @ W.T, jnp.identity(n_sources), decimal=2)
     # Estimated sources
     S_est = W.T @ X
     # For comparison purposes
-    S, _ = demeaning(S)
-    S, _ = whitening(S)
+    S, meanS, whiteS = centering_and_whitening(S)
     # Finding the permutation of the signals
     perm = jnp.argmax(jnp.abs(S_est @ S.T),
                       axis=0)  # trick to find the permutation of the signals

@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 
 
-def demeaning(X):
+def centering(X):
     """
     Centering the data.
     :param X: data matrix of shape (n_features, n_samples)
@@ -25,3 +25,14 @@ def whitening(X):
     eigenvectors = jnp.real(eigenvectors)
     inverse_eigenvalues = jnp.diag(1 / jnp.sqrt(eigenvalues))
     return inverse_eigenvalues @ eigenvectors.T @ X, inverse_eigenvalues @ eigenvectors.T
+
+
+def centering_and_whitening(X):
+    """
+    Centering and whitening the data using the two previous functions
+    :param X: data matrix of shape (n_features, n_samples)
+    :return: centered and whitened data matrix, X = m + sigma @ X
+    """
+    X, mean = centering(X)
+    X, sigma = whitening(X)
+    return X, mean, sigma

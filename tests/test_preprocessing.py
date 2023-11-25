@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.fast_ica.preprocessing import demeaning, whitening
+from mva_independent_component_analysis.fast_ica.preprocessing import centering, whitening
 import numpy.testing as npt
 
 
@@ -24,6 +24,6 @@ def test_whitened_data():
     _, key_samples = jax.random.split(JAX_KEY, 2)
     X = mean + std @ jax.random.normal(key_samples, (n_features, n_samples))
 
-    centred_X, _ = demeaning(X)
+    centred_X, _ = centering(X)
     whitened_X, _ = whitening(X)
     npt.assert_array_almost_equal(jnp.cov(whitened_X), jnp.identity(n_features), decimal=2)
