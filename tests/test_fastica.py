@@ -2,14 +2,14 @@ import jax
 import jax.numpy as jnp
 from mva_independent_component_analysis.fast_ica.preprocessing import demeaning, whitening
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
-from mva_independent_component_analysis.mle_ica.mle_fastica import fast_ica as mle_fast_ica
+from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
 
 import numpy.testing as npt
 from scipy.signal import sawtooth
 import pytest
 from functools import partial
 
-FAST_ICAs = [partial(fast_ica, fun=jnp.tanh), mle_fast_ica] #test does not pass on mle_fast_ica.
+FAST_ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica]  # test does not pass on mle_fast_ica.
 
 
 @pytest.mark.parametrize("fast_ica_implementation", FAST_ICAs)
@@ -67,9 +67,9 @@ def test_ica_identification(fast_ica_implementation):
                       axis=0)  # trick to find the permutation of the signals
     # Test the ratio of the reconstructed signal to the original signals
     for i in range(n_sources):
-        ratio = jnp.abs(S_est[i] / S[perm[i]])
+        ratio = jnp.abs(S_est[perm[i]] / S[i])
         std = jnp.std(ratio)
         mean = jnp.mean(ratio)
-        ratio = ratio[(ratio - mean) / std < 2] #removing outliers, ICA is sensitive to outliers
+        ratio = ratio[(ratio - mean) / std < 2]  # removing outliers, ICA is sensitive to outliers
         npt.assert_allclose(jnp.mean(ratio), 1,
                             atol=0.2)  # in average, the reconstructed signal should be equal to the original signal up to scaling

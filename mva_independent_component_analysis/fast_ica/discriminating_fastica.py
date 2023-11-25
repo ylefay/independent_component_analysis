@@ -2,48 +2,28 @@ import jax
 import jax.numpy as jnp
 
 
-@jax.vmap
-def super_or_sub_gaussian(x):
+def subgaussian(x):
     """
-    See "Different Estimation Methods for the Basic Independent Component Analysis Model", Zhenyi An
-    Theorem 3.1.11.
+    Subgaussian log probability of a single source x.
+    Assumption:
+            p_i propto Exp[-x^2/2 - Log[Cosh[x]]]
+    i.e.,  g_i = x + tanh(x)
+    :param x: an array of shape (n_samples, ), float.
 
-    :param x: single source of shape (n_samples, )
-    :return: array of shape (n_samples, ),
-        appropriate derivative of log-density for x depending on estimated sub or super-gaussianity of x.
     """
+    return jnp.tanh(x) + x
 
-    def get_subgaussian_log_prob(x):
-        """
-        Subgaussian log probability of a single source x.
-        Assumption:
-                p_i propto Exp[-x^2/2 - Log[Cosh[x]]]
 
-        :param x: an array of shape (n_samples, ), float.
+def supergaussian(x):
+    """
+    Supergaussian log probability of a single source x.
+    Assumption:
+        p_i propto Exp[-x^2/2 + Log[Cosh[x]]]
+    i.e.,  g_i = x - tanh(x)
+    :param x: an array of shape (n_samples, ), float.
 
-        """
-        return - x ** 2 / 2 - jnp.log(jnp.cosh(x))
-
-    def get_supergaussian_log_prob(x):
-        """
-        Supergaussian log probability of a single source x.
-        Assumption:
-            p_i propto Exp[-x^2/2 + Log[Cosh[x]]]
-
-        :param x: an array of shape (n_samples, ), float.
-
-        """
-        return - x ** 2 / 2 + jnp.log(jnp.cosh(x))
-
-    def minus(x):
-        g, dg = jax.value_and_grad(jax.grad(get_subgaussian_log_prob))(x)
-        return x * g - dg
-
-    return jax.lax.cond(minus(x) > 0,
-                        lambda _x: jax.grad(get_subgaussian_log_prob)(x),
-                        lambda _x: jax.grad(get_supergaussian_log_prob)(x),
-                        x
-                        )
+    """
+    return x - jnp.tanh(x)
 
 
 def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
@@ -63,8 +43,26 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     if n_components is None:
         n_components = N
 
-    def fun_p(x):
-        return jax.vmap(jax.grad(super_or_sub_gaussian))(x)
+    def fun_funp(x):
+        """
+        See "Different Estimation Methods for the Basic Independent Component Analysis Model", Zhenyi An
+        Theorem 3.1.11.
+
+        :param x: single source of shape (n_samples, )
+        :return: array of shape (n_samples, ),
+            appropriate derivative of log-density for x depending on estimated sub or super-gaussianity of x.
+        """
+
+        def minus(x):
+            # g, dg = jax.value_and_grad(subgaussian)(x)
+            # another criterion is x * g - dg > 0
+            return jnp.sum(x ** 4 - 3)  # we use the kurtosis to discriminate.
+
+        return jax.lax.cond(minus(x) > 0,
+                            jax.vmap(jax.value_and_grad(subgaussian)),
+                            jax.vmap(jax.value_and_grad(supergaussian)),
+                            x
+                            )
 
     def cond(args):
         step, diff, _ = args
@@ -78,7 +76,8 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
         def iter(inps):
             step, diff, w = inps
             old_w = w
-            w = 1 / M * X @ super_or_sub_gaussian(w.T @ X).T - 1 / M * super_or_sub_gaussian(w.T @ X) @ jnp.ones(
+            fun_img, fun_p_img = fun_funp(w.T @ X)
+            w = 1 / M * X @ fun_img.T - 1 / M * fun_p_img @ jnp.ones(
                 (M,)) * w
 
             @jax.vmap
