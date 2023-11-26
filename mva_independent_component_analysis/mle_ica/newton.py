@@ -1,6 +1,5 @@
 import jax
 import jax.numpy as jnp
-from functools import partial
 from .schmidt import gs_sampling, gs
 
 
@@ -33,21 +32,19 @@ def switching_criterion_kurtosis(y):
 
 
 def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
-               learning_rate=0.0001, prior=None):
+               learning_rate=0.0001, g=None):
     n_features, n_samples = X.shape
     if n_components is None:
         n_components = n_features
 
-    def compute_update_matrix(X, W):
+    def compute_update_matrix(W):
         S = W @ X
         id = jnp.eye(n_components, n_components)
-        if prior is None:
+        if g is None:
             sign_matrix = jnp.diag(jax.vmap(switching_criterion_kurtosis)(S))
             dW = (id - 1 / n_samples * (sign_matrix @ jnp.tanh(S) + S) @ S.T) @ W
-        if prior == 'super':
-            dW = (id - 1 / n_samples * jnp.sum(supergaussian(S), axis=1)) @ W
-        if prior == 'sub':
-            dW = (id - 1 / n_samples * jnp.sum(subgaussian(S), axis=1)) @ W
+        else:
+            dW = (id - 1 / n_samples * jnp.sum(g(S), axis=1)) @ W
         return dW
 
     def cond(args):
@@ -56,7 +53,7 @@ def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
 
     def iter(carry):
         step, W, _ = carry
-        dW = compute_update_matrix(X, W)
+        dW = compute_update_matrix(W)
         W += learning_rate * dW
         W = gs(W)
         return step + 1, W, dW
