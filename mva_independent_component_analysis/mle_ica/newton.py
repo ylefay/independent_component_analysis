@@ -50,18 +50,12 @@ def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
     if n_components is None:
         n_components = n_features
 
-    def compute_update_matrix(x, W):
+    def compute_update_matrix(X, W):
         S = W @ X
         id = jnp.eye(n_components, n_components)
         if prior is None:
             sign_matrix = jnp.diag(jax.vmap(switching_criterion_kurtosis)(S))
-
-            # dW = (id - 1 / n_samples * (sign_matrix @ jnp.tanh(S) - S) @ S.T) @ W
-            @partial(jnp.vectorize, signature='(n)->(m,m)')
-            def f(x):
-                return (sign_matrix @ jnp.tanh(W @ x) - W @ x) @ (W @ x).T
-
-            dW = (id - jnp.mean(f(X), axis=0) @ W)
+            dW = (id - 1 / n_samples * (sign_matrix @ jnp.tanh(S) - S) @ S.T) @ W
         if prior == 'super':
             dW = (id - 1 / n_samples * (jnp.tanh(S) - S) @ S.T) @ W
         if prior == 'sub':
