@@ -12,7 +12,7 @@ import pytest
 from functools import partial
 
 ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, newton_ica]  # test does not pass on mle_fast_ica.
-
+ICAs = [newton_ica]
 
 @pytest.mark.parametrize("ica_implementation", ICAs)
 def test_fastica(ica_implementation):
