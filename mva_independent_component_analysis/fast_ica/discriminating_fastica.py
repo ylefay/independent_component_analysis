@@ -6,24 +6,24 @@ def subgaussian(x):
     """
     Subgaussian log probability of a single source x.
     Assumption:
-            p_i propto Exp[-x^2/2 - Log[Cosh[x]]]
-    i.e.,  g_i = x + tanh(x)
+            p_i propto Exp[-x^2/2 + Log[Cosh[x]]]
+    i.e.,  g_i = x - tanh(x)
     :param x: an array of shape (n_samples, ), float.
 
     """
-    return jnp.tanh(x) + x
+    return -jnp.tanh(x) + x
 
 
 def supergaussian(x):
     """
     Supergaussian log probability of a single source x.
     Assumption:
-        p_i propto Exp[-x^2/2 + Log[Cosh[x]]]
-    i.e.,  g_i = x - tanh(x)
+        p_i propto Exp[-x^2/2 - Log[Cosh[x]]]
+    i.e.,  g_i = x + tanh(x)
     :param x: an array of shape (n_samples, ), float.
 
     """
-    return x - jnp.tanh(x)
+    return x + jnp.tanh(x)
 
 
 def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
@@ -95,4 +95,4 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     keys = jax.random.split(op_key, n_components)
     out, _ = jax.lax.scan(iter_one_component, (0, jnp.zeros((n_features, n_components))), keys)
     _, W = out
-    return W
+    return W.T

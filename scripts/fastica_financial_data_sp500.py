@@ -1,6 +1,5 @@
-from mva_independent_component_analysis.fast_ica.preprocessing import centering_and_whitening
+from mva_independent_component_analysis.preprocessing import centering_and_whitening
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
-from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
 import pandas as pd
 import numpy as np
 import matplotlib as mpl

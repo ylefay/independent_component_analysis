@@ -47,4 +47,4 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, fun=jnp.tanh, max_iter=10 *
     keys = jax.random.split(op_key, n_components)
     out, _ = jax.lax.scan(iter_one_component, (0, jnp.zeros((n_features, n_components))), keys)
     _, W = out
-    return W
+    return W.T

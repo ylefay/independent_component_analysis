@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.fast_ica.preprocessing import centering, whitening
+from mva_independent_component_analysis.preprocessing import centering, whitening
 import numpy.testing as npt
 
 

@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from mva_independent_component_analysis.fast_ica.preprocessing import centering_and_whitening
+from mva_independent_component_analysis.preprocessing import centering_and_whitening
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
 from mva_independent_component_analysis.mle_ica.newton import newton_ica
@@ -12,7 +12,7 @@ import pytest
 from functools import partial
 
 ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, newton_ica]  # test does not pass on mle_fast_ica.
-ICAs = [newton_ica]
+
 
 @pytest.mark.parametrize("ica_implementation", ICAs)
 def test_fastica(ica_implementation):
@@ -26,13 +26,14 @@ def test_fastica(ica_implementation):
     max_features = 100
 
     n_features = jax.random.randint(JAX_KEY, (1,), min_features, max_features).at[0].get()
-
     _, key_samples = jax.random.split(JAX_KEY, 2)
     X = jax.random.normal(key_samples, (n_features, n_samples))
 
     X, _, _ = centering_and_whitening(X)
-    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-5, max_iter=1000)
-    S = W.T @ X
+    n_components = X.shape[0] - 1  # hardcoding one less than n_features to test for non square matrices
+    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=n_components, tol=1e-5, max_iter=1000)
+    S = W @ X
+    npt.assert_array_almost_equal(W @ W.T, jnp.identity(n_components), decimal=2)
 
 
 @pytest.mark.parametrize("ica_implementation", ICAs)
@@ -53,12 +54,16 @@ def test_ica_identification(ica_implementation):
     X = A @ S
     # Whiten mixed signals
     X, meanX, whiteM = centering_and_whitening(X)
-    # Running ICA.
-    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=5000)
+    # Running ICA
+    if newton_ica == ica_implementation:
+        max_iter = 500000
+    else:
+        max_iter = 5000
+    W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=max_iter)
     # Testing for orthogonality
-    npt.assert_array_almost_equal(W @ W.T, jnp.identity(n_sources), decimal=2)
+    npt.assert_array_almost_equal(W.T @ W, jnp.identity(n_sources), decimal=2)
     # Estimated sources
-    S_est = W.T @ X
+    S_est = W @ X
     # For comparison purposes
     S, meanS, whiteS = centering_and_whitening(S)
     # Finding the permutation of the signals
@@ -69,6 +74,9 @@ def test_ica_identification(ica_implementation):
         ratio = jnp.abs(S_est[perm[i]] / S[i])
         std = jnp.std(ratio)
         mean = jnp.mean(ratio)
-        ratio = ratio[(ratio - mean) / std < 2]  # removing outliers, ICA is sensitive to outliers
+        ratio = ratio[(ratio - mean) / std < 1.25]
+        mean = jnp.mean(ratio)
+        std = jnp.std(ratio)  # very few outliers are giving over-estimated std
+        ratio = ratio[(ratio - mean) / std < 1.25]
         npt.assert_allclose(jnp.mean(ratio), 1,
                             atol=0.2)  # in average, the reconstructed signal should be equal to the original signal up to scaling
