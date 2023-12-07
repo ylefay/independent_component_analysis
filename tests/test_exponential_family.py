@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.generate_data.exponential_family \
-    import logdensity_function_univ_normal, logdensity_function_multivariate_normal
+from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.ivae.exponential_family \
+    import logdensity_univ_normal
 import numpy.testing as npt
 
 
@@ -13,7 +13,7 @@ def test_sum_to_one_normal_univ():
                                maxval=5)
 
     def log_density_function(z):
-        logdensity, _, _, _ = logdensity_function_univ_normal(z, mu, sigma)
+        logdensity, _, _, _ = logdensity_univ_normal(z, mu, sigma)
         return logdensity
 
     integration_linspace = jnp.linspace(-4 * sigma, 4 * sigma, 100) + mu

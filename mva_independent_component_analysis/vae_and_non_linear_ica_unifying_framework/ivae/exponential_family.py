@@ -1,7 +1,8 @@
+import jax.lax
 import jax.numpy as jnp
 
 
-def logdensity_function_ef(z, u, T, A, L):
+def logdensity_ef(z, u, T, A, L):
     """
     Log-density function of an exponential distribution assuming
     univariate exponential distribution for each coordinate, i.e.,
@@ -16,7 +17,7 @@ def logdensity_function_ef(z, u, T, A, L):
     return jnp.einsum('ij,ji->', T(z), L(u)) - jnp.einsum('i->', A(u))
 
 
-def logdensity_function_univ_normal(z_scalar, mu, sigma):
+def logdensity_univ_normal(z_scalar, mu, sigma):
     """
     Log-density function of an univariate normal distribution
     :param z: scalar latent variable
@@ -24,10 +25,24 @@ def logdensity_function_univ_normal(z_scalar, mu, sigma):
     :param sigma: standard deviation
     :return: log-density
     """
-    return logdensity_function_multivariate_normal(z_scalar, mu.reshape(1, ), sigma.reshape((1, 1)))
+    return logdensity_multivariate_normal(z_scalar, mu.reshape(1, ), sigma.reshape((1, 1)))
 
 
-def logdensity_function_multivariate_normal(z, mu, sigma):
+def logdensity_normal(z, mu, var):
+    """
+    Log-density function of univariate normal distributions (vectorized).
+    Do not use previous functions.
+    :param z: scalar latent variable
+    :param mu: mean
+    :param var: variance
+    :return: log-density
+    """
+    if mu.shape != var.shape:
+        var = jax.lax.expand_dims(var, dimensions=mu.shape)
+    return -0.5 * (jnp.log(2 * jnp.pi) + jnp.log(var) + (z - mu) ** 2 / var)
+
+
+def logdensity_multivariate_normal(z, mu, sigma):
     """
     Log-density function of a multivariate normal distribution
     with diagonal covariance matrix, constructed using the univariate normal distribution
@@ -48,7 +63,7 @@ def logdensity_function_multivariate_normal(z, mu, sigma):
     def Ls(u):
         return jnp.vstack([(mu / sigma ** 2).T, (-1 / (2 * sigma ** 2)).T])
 
-    return logdensity_function_ef(z, 0.0, Ts, As, Ls), Ts, As, Ls
+    return logdensity_ef(z, 0.0, Ts, As, Ls), Ts, As, Ls
 
 
 def logdensity_laplace_distribution_univ(x, mu, b):
@@ -58,4 +73,4 @@ def logdensity_laplace_distribution_univ(x, mu, b):
     :param b: scale
     :return: log-density
     """
-    return 1 / (2 * b) * jnp.exp(- jnp.abs(x - mu) / b)
+    return - jnp.log(2 * b) - jnp.abs(x - mu) / b
