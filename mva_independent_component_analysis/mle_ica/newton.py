@@ -33,6 +33,19 @@ def switching_criterion_kurtosis(y):
 
 def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
                learning_rate=0.0001, g=None):
+    """
+    Perform a Newton's descent on the log-likelihood of the ICA model.
+    :param op_key:
+    :param X: observed signals of shape (n_features, n_samples)
+    :param n_components: number of desired components
+    :param tol: tolerance for the Gradient's step size, used as a stopping criterion
+    :param max_iter: maximum number of iterations, used as a stopping criterion
+    :param learning_rate: learning rate for the Newton's descent
+    :param g: given g, the prior on the log-density of the source.
+    If g is none, we use the kurtosis as a criterion to discriminate between sub and supergaussian sources,
+    with supergaussian and subgaussian functions previously defined.
+    :return: W, the estimated mixing matrix of shape (n_components, n_features)
+    """
     n_features, n_samples = X.shape
     if n_components is None:
         n_components = n_features

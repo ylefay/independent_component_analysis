@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from mva_independent_component_analysis.preprocessing import centering_and_whitening
+from mva_independent_component_analysis.utils import centering_and_whitening, generate_mixing_matrix
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
 from mva_independent_component_analysis.mle_ica.newton import newton_ica, subgaussian, supergaussian
@@ -52,16 +52,14 @@ def test_ica_identification(ica_implementation):
                    jax.random.uniform(JAX_KEY, shape=(len(ns),))])
     n_sources, n_samples = S.shape
     # Mixing process
-    A = jnp.array([[0.5, 1, 0.2],
-                   [1, 0.5, 0.4],
-                   [0.5, 0.8, 1]])
+    A = generate_mixing_matrix(JAX_KEY, n_sources, n_sources, n_iter_4_cond=None)
     # Mixed signals
     X = A @ S
     # Whiten mixed signals
     X, meanX, whiteM = centering_and_whitening(X)
     # Running ICA
     if newton_ica == ica_implementation:
-        max_iter = 500000
+        max_iter = 500000 # newton ica is slower
     else:
         max_iter = 5000
     W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=max_iter)

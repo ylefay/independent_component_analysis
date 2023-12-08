@@ -30,8 +30,7 @@ def gs(A):
 
 def gs_sampling(op_key, shape):
     """
-    Sampling random semi-orthogonal matrix by using the
-    Gram-Schmidt orthogonalization algorithm for non-square matrix.
+    Sampling random semi-orthogonal matrix by using the Gram-Schmidt orthogonalization algorithm for non-square matrix.
     Assuming A nxm with n <= m and rank n.
     :return semi-orthogonal matrix
     """
