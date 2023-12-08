@@ -7,26 +7,28 @@ from functools import partial
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_dim, n_layers, activation='none', slope=.1):
-        super().__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.n_layers = n_layers
-        if isinstance(hidden_dim, int):
-            self.hidden_dim = hidden_dim * jnp.ones(self.n_layers - 1)
-        elif isinstance(hidden_dim, list):
-            self.hidden_dim = hidden_dim
-        if isinstance(activation, Union[str, callable]):
-            self.activation = [activation] * (self.n_layers - 1)
-        elif isinstance(activation, list):
-            self.activation = activation
-        self.slope = slope
+    input_dim: int
+    output_dim: int
+    hidden_dim: Union[int, list]
+    n_layers: int
+    activation: Union[str, list, Callable] = 'none'
+    slope: float = .1
+
+    def setup(self):
+        if isinstance(self.hidden_dim, int):
+            self.hidden_dim = self.hidden_dim * jnp.ones(self.n_layers - 1)
+        elif isinstance(self.hidden_dim, list):
+            self.hidden_dim = self.hidden_dim
+        if isinstance(self.activation, Union[str, Callable]):
+            self.activation = [self.activation] * (self.n_layers - 1)
+        elif isinstance(self.activation, list):
+            self.activation = self.activation
         self._act_f = []
         for act in self.activation:
             if act == 'lrelu':
-                self._act_f.append(lambda x: nn.leaky_relu(x, negative_slope=slope))
+                self._act_f.append(lambda x: nn.leaky_relu(x, negative_slope=self.slope))
             elif act == 'xtanh':
-                self._act_f.append(lambda x: nn.tanh(x) + slope * x)
+                self._act_f.append(lambda x: nn.tanh(x) + self.slope * x)
             elif act == 'sigmoid':
                 self._act_f.append(nn.sigmoid)
             elif act == 'none':
@@ -53,27 +55,34 @@ class MLP(nn.Module):
 
 
 class IVAE(nn.Module):
-    def __init__(self, OP_key, data_dim, latent_dim, aux_dim, n_layers=3, activation='xtanh', hidden_dim=50, slope=.1):
-        super().__init__()
-        self.OP_key = OP_key
-        _, self.key = jax.random.split(OP_key, 2)
-        self.data_dim = data_dim
-        self.latent_dim = latent_dim
-        self.aux_dim = aux_dim
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-        self.activation = activation
-        self.slope = slope
+    OP_key: jax.random.PRNGKey
+    data_dim: int
+    latent_dim: int
+    aux_dim: int
+    n_layers: int = 3
+    activation: str = 'xtanh'
+    hidden_dim: int = 50
+    slope: float = .1
+
+    def setup(self):
+        _, self.key = jax.random.split(self.OP_key, 2)
 
         # prior params
         self.prior_mean = jnp.zeros(1)
-        self.logl = MLP(aux_dim, latent_dim, hidden_dim, n_layers, activation=activation, slope=slope)
+        self.logl = MLP(self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers, activation=self.activation,
+                        slope=self.slope)
         # decoder params
-        self.f = MLP(latent_dim, data_dim, hidden_dim, n_layers, activation=activation, slope=slope)
+        self.f = MLP(self.latent_dim, self.data_dim, self.hidden_dim, self.n_layers, activation=self.activation,
+                     slope=self.slope)
         self.decoder_var = .1 * jnp.ones(1)
         # encoder params
-        self.g = MLP(data_dim + aux_dim, latent_dim, hidden_dim, n_layers, activation=activation, slope=slope)
-        self.logv = MLP(data_dim + aux_dim, latent_dim, hidden_dim, n_layers, activation=activation, slope=slope)
+        self.g = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers,
+                     activation=self.activation, slope=self.slope)
+        self.logv = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers,
+                        activation=self.activation, slope=self.slope)
+
+    def __call__(self):
+        return self
 
     @staticmethod
     def reparameterize(key, mean, var):
@@ -104,6 +113,7 @@ class IVAE(nn.Module):
         return f, g, v, s, l
 
     @partial(jax.jit, static_argnums=(3, 4, 5, 6, 7))
+    @partial(jax.value_and_grad, argnums=[1, 2], has_aux=True)
     def elbo(self, x, u, N, a=1., b=1., c=1., d=1.):
         f, g, v, z, l = self.forward(x, u)
         M, d_latent = z.size()
