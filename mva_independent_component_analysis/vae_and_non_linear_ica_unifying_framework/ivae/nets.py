@@ -170,12 +170,7 @@ class Normal(Dist):
         gpu compatible
         """
 
-        @jax.lax.stop_gradient
-        def body(_, cov):
-            sign, logabsdet = jnp.slogdet(cov)
-            return None, (sign, logabsdet)
-
-        _, out = jax.lax.scan(body, None, cov_batch)
+        out = jax.lax.map(jax.lax.stop_gradient(jnp.slogdet), cov_batch) # à check
         signs, logabsdets = out
         return signs, logabsdets
 
