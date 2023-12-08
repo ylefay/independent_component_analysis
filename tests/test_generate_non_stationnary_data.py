@@ -29,7 +29,8 @@ def test_generate_non_stationnary_data(prior):
 @pytest.mark.parametrize("prior", PRIORS)
 @pytest.mark.parametrize("activation", ACTIVATIONS)
 @pytest.mark.parametrize("lin_type", LIN_TYPES)
-def test_generate_data(prior, activation, lin_type):
+@pytest.mark.parametrize("staircase", [True, False])
+def test_generate_data(prior, activation, lin_type, staircase):
     # This test the function generate_data passes. No specific test is otherwise, to do.
     # See figure 9. in
     # Variational Autoencoders and Nonlinear ICA: A Unifying Framework
@@ -42,5 +43,5 @@ def test_generate_data(prior, activation, lin_type):
                       n_features=n_features, n_layers=3,
                       prior=prior,
                       activation=activation, slope=.1, var_lb=0.5, var_ub=3, lin_type=lin_type,
-                      n_iter_4_cond=5, noisy=1)
+                      n_iter_4_cond=5, noisy=1, staircase=staircase)
     pass
