@@ -53,6 +53,11 @@ class MLP(nn.Module):
                 h = self._act_f[c](self.fc[c](h))
         return h
 
+    @staticmethod
+    def xtanh(x, alpha=.1):
+        """tanh function plus an additional linear term"""
+        return jnp.tanh(x) + alpha * x
+
 
 class IVAE(nn.Module):
     OP_key: jax.random.PRNGKey
@@ -112,7 +117,7 @@ class IVAE(nn.Module):
         f = self.decoder(s)
         return f, g, v, s, l
 
-    @partial(jax.jit, static_argnums=(3, 4, 5, 6, 7))
+    # @partial(jax.jit, static_argnums=(3, 4, 5, 6, 7))
     @partial(jax.value_and_grad, argnums=[1, 2], has_aux=True)
     def elbo(self, x, u, N, a=1., b=1., c=1., d=1.):
         f, g, v, z, l = self.forward(x, u)

@@ -37,9 +37,8 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
     params = model.init(key2)
     optimizer = adamw(learning_rate=lr)
     opt_state = optimizer.init(params)
-
     for i in range(size):
         x, s, u = batches[0][i], batches[1][i], batches[2][i]
-        (loss, new_state), grads = model.elbo(x, u)
+        (loss, new_state), grads = model.elbo(x, u, dataset.len, a=learning_cfg['a'], b=learning_cfg['b'], c=learning_cfg['c'], d=learning_cfg['d'])
         updates, opt_state = optimizer.update(grads, new_state)
         params = apply_updates(params, updates)
