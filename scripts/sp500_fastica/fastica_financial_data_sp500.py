@@ -12,7 +12,7 @@ OP_key = jax.random.PRNGKey(1337)
 fast_ica_method = fast_ica
 
 # Reading the data.
-spy_data = pd.read_csv("./data/sp500/sp500_per_sectors.csv", index_col=0)
+spy_data = pd.read_csv("data/sp500/sp500_per_sectors.csv", index_col=0)
 timestamp = spy_data.index
 sectors = spy_data.columns
 # Computing the log-returns.

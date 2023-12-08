@@ -70,16 +70,21 @@ def generate_nonstationary_sources(OP_key, n_per_seg, n_seg, d, prior='gauss', v
     elif prior == 'gauss':
         sources = jax.random.normal(key=key1, shape=(n, d))
 
-    for seg in range(n_seg):
-        segID = jnp.arange(n_per_seg * seg, n_per_seg * (seg + 1))
-        sources = sources.at[segID].set(sources.at[segID].get() * L.at[seg].get() + m.at[seg].get())
-        labels = labels.at[segID].set(seg)
+    def iter(carry, inps):
+        sources, labels = carry
+        seg, segId, L_i, m_i = inps
+        sources = sources.at[segId].set(sources.at[segId].get() * L_i + m_i)
+        labels = labels.at[segId].set(seg)
+        return (sources, labels), None
+
+    (sources, labels), _ = jax.lax.scan(iter, (sources, labels), (
+    jnp.arange(n_seg), jnp.arange(n_seg * n_per_seg).reshape((n_seg, n_per_seg)), L, m))
 
     return sources, labels, m, L
 
 
-def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_layers=3, prior='gauss',
-                  activation='lrelu', slope=.1, var_lb=0.5, var_ub=3, lin_type='uniform', n_iter_4_cond=1e4, noisy=0,
+def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_layers=4, prior='gauss',
+                  activation='lrelu', slope=.1, var_lb=0.5, var_ub=3, lin_type='uniform', n_iter_4_cond=100, noisy=0,
                   uncentered=False, centers=None, staircase=False, repeat_linearity=False):
     """
     Generate artificial data with arbitrary mixing of latent variables
@@ -141,11 +146,13 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
     else:
         assert n_layers > 1  # suppose we always have at least 2 layers. The last layer doesn't have a non-linearity
         key1, key = jax.random.split(key, 2)
-        A = generate_mixing_matrix(key1, n_components, n_features, lin_type=lin_type, n_iter_4_cond=n_iter_4_cond, staircase=staircase)
+        A = generate_mixing_matrix(key1, n_components, n_features, lin_type=lin_type, n_iter_4_cond=n_iter_4_cond,
+                                   staircase=staircase)
         X = act_f(S @ A)
         if n_components != n_features:
             key1, key = jax.random.split(key, 2)
-            B = generate_mixing_matrix(key1, n_features, lin_type=lin_type, n_iter_4_cond=n_iter_4_cond, staircase=staircase)
+            B = generate_mixing_matrix(key1, n_features, lin_type=lin_type, n_iter_4_cond=n_iter_4_cond,
+                                       staircase=staircase)
         else:
             B = A
         for nl in range(1, n_layers):

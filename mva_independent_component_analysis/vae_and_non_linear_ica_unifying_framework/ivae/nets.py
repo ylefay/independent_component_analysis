@@ -2,7 +2,7 @@ from flax import linen as nn
 import jax.numpy as jnp
 import jax
 from exponential_family import logdensity_normal
-from typing import Union
+from typing import Union, Callable
 
 
 class MLP(nn.Module):
@@ -29,7 +29,7 @@ class MLP(nn.Module):
                 self._act_f.append(nn.sigmoid)
             elif act == 'none':
                 self._act_f.append(lambda x: x)
-            elif isinstance(act, callable):
+            elif isinstance(act, Callable):
                 self._act_f.append(act)
         if self.n_layers == 1:
             fc_list = [nn.linear.Dense(self.input_dim, self.output_dim)]
