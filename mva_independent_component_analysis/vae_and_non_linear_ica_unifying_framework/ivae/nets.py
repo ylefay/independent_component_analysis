@@ -1,8 +1,9 @@
 from flax import linen as nn
 import jax.numpy as jnp
 import jax
-from exponential_family import logdensity_normal
+from .exponential_family import logdensity_normal
 from typing import Union, Callable
+from functools import partial
 
 
 class MLP(nn.Module):
@@ -12,7 +13,7 @@ class MLP(nn.Module):
         self.output_dim = output_dim
         self.n_layers = n_layers
         if isinstance(hidden_dim, int):
-            self.hidden_dim = [hidden_dim] * (self.n_layers - 1)
+            self.hidden_dim = hidden_dim * jnp.ones(self.n_layers - 1)
         elif isinstance(hidden_dim, list):
             self.hidden_dim = hidden_dim
         if isinstance(activation, Union[str, callable]):
@@ -20,6 +21,7 @@ class MLP(nn.Module):
         elif isinstance(activation, list):
             self.activation = activation
         self.slope = slope
+        self._act_f = []
         for act in self.activation:
             if act == 'lrelu':
                 self._act_f.append(lambda x: nn.leaky_relu(x, negative_slope=slope))
@@ -101,6 +103,7 @@ class IVAE(nn.Module):
         f = self.decoder(s)
         return f, g, v, s, l
 
+    @partial(jax.jit, static_argnums=(3, 4, 5, 6, 7))
     def elbo(self, x, u, N, a=1., b=1., c=1., d=1.):
         f, g, v, z, l = self.forward(x, u)
         M, d_latent = z.size()
@@ -112,7 +115,7 @@ class IVAE(nn.Module):
         logqs = jnp.logaddexp(logqs_tmp.sum(dim=-1), dim=1, keepdim=False) - jnp.log(M * N)
         logqs_i = (jnp.logaddexp(logqs_tmp, dim=1, keepdim=False) - jnp.log(M * N)).sum(dim=-1)
 
-        elbo = -(a * logpx - b * (logqs_cux - logqs) - c * (logqs - logqs_i) - d * (logqs_i - logps_cu)).mean()
+        elbo = -jnp.mean((a * logpx - b * (logqs_cux - logqs) - c * (logqs - logqs_i) - d * (logqs_i - logps_cu)))
         return elbo, z
 
 
@@ -170,7 +173,7 @@ class Normal(Dist):
         gpu compatible
         """
 
-        out = jax.lax.map(jax.lax.stop_gradient(jnp.slogdet), cov_batch) # à check
+        out = jax.lax.map(jax.lax.stop_gradient(jnp.slogdet), cov_batch)  # à check
         signs, logabsdets = out
         return signs, logabsdets
 

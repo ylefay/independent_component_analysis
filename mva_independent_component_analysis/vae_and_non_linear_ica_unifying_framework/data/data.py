@@ -78,7 +78,7 @@ def generate_nonstationary_sources(OP_key, n_per_seg, n_seg, d, prior='gauss', v
         return (sources, labels), None
 
     (sources, labels), _ = jax.lax.scan(iter, (sources, labels), (
-    jnp.arange(n_seg), jnp.arange(n_seg * n_per_seg).reshape((n_seg, n_per_seg)), L, m))
+        jnp.arange(n_seg), jnp.arange(n_seg * n_per_seg).reshape((n_seg, n_per_seg)), L, m))
 
     return sources, labels, m, L
 
@@ -168,3 +168,24 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
 
     U = jax.nn.one_hot([U], num_classes=n_seg)[0]
     return S, X, U, M, L
+
+
+class DataSet():
+    """
+    Dataset class for the generated data of the form (S=sources, X=data, U=auxiliary variables, M=mean, L=variance)
+    """
+
+    def __init__(self, data):
+        self.data = data.f
+        self.s = jnp.asarray(self.data.S)
+        self.x = jnp.asarray(self.data.X)
+        self.u = jnp.asarray(self.data.U)
+        self.l = jnp.asarray(self.data.L)
+        self.m = jnp.asarray(self.data.M)
+        self.len = self.x.shape[0]
+        self.latent_dim = self.s.shape[1]
+        self.aux_dim = self.u.shape[1]
+        self.data_dim = self.x.shape[1]
+
+    def get_dims(self):
+        return self.data_dim, self.latent_dim, self.aux_dim

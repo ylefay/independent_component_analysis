@@ -1,1 +1,1 @@
-from .data import generate_data, generate_nonstationary_sources
+from .data import generate_data, generate_nonstationary_sources, DataSet
