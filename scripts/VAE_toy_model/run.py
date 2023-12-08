@@ -1,4 +1,4 @@
-from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.ivae import train
+from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.ivae import train_and_evaluate
 from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import DataSet
 import jax.numpy as jnp
 import jax
@@ -20,13 +20,13 @@ def main():
         'c': 0,
         'd': 10,
         'lr': 1e-2,
-        'batch_size': 64,
+        'batch_size': 10,
         'epochs': 10,
         'anneal': False,
         'anneal_epoch': 20
     }
 
-    train(OP_key, dataset, model_cfg, learning_cfg)
+    train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg)
 
 
 if __name__ == "__main__":
