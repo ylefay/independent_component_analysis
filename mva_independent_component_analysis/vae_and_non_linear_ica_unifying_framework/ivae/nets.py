@@ -2,61 +2,31 @@ from flax import linen as nn
 import jax.numpy as jnp
 import jax
 from .exponential_family import logdensity_normal
-from typing import Union, Callable
+from typing import Callable
 from functools import partial
 
 
 class MLP(nn.Module):
     input_dim: int
     output_dim: int
-    hidden_dim: Union[int, list]
+    hidden_dim: int
     n_layers: int
-    activation: Union[str, list, Callable] = 'none'
-    slope: float = .1
+    activation: Callable = 'none'
 
     def setup(self):
-        if isinstance(self.hidden_dim, int):
-            self.hidden_dim = self.hidden_dim * jnp.ones(self.n_layers - 1)
-        elif isinstance(self.hidden_dim, list):
-            self.hidden_dim = self.hidden_dim
-        if isinstance(self.activation, Union[str, Callable]):
-            self.activation = [self.activation] * (self.n_layers - 1)
-        elif isinstance(self.activation, list):
-            self.activation = self.activation
-        self._act_f = []
-        for act in self.activation:
-            if act == 'lrelu':
-                self._act_f.append(lambda x: nn.leaky_relu(x, negative_slope=self.slope))
-            elif act == 'xtanh':
-                self._act_f.append(lambda x: nn.tanh(x) + self.slope * x)
-            elif act == 'sigmoid':
-                self._act_f.append(nn.sigmoid)
-            elif act == 'none':
-                self._act_f.append(lambda x: x)
-            elif isinstance(act, Callable):
-                self._act_f.append(act)
         if self.n_layers == 1:
-            fc_list = [nn.linear.Dense(self.input_dim, self.output_dim)]
+            self.layers = [nn.linear.Dense(self.output_dim)]
         else:
-            fc_list = [nn.linear.Dense(self.input_dim, self.hidden_dim[0])]
-            for i in range(1, self.n_layers - 1):
-                fc_list.append(nn.linear.Dense(self.hidden_dim[i - 1], self.hidden_dim[i]))
-            fc_list.append(nn.linear.Dense(self.hidden_dim[self.n_layers - 2], self.output_dim))
-        self.fc = fc_list
+            self.layers = [nn.linear.Dense(self.hidden_dim) for i in range(self.n_layers - 1)]
+            self.layers += tuple([nn.linear.Dense(self.output_dim)])
 
-    def forward(self, x):
+    def __call__(self, x):
         h = x
-        for c in range(self.n_layers):
-            if c == self.n_layers - 1:
-                h = self.fc[c](h)
-            else:
-                h = self._act_f[c](self.fc[c](h))
+        for i, lyr in enumerate(self.layers):
+            h = lyr(h)
+            if i < self.n_layers - 1:
+                h = self.activation(h)
         return h
-
-    @staticmethod
-    def xtanh(x, alpha=.1):
-        """tanh function plus an additional linear term"""
-        return jnp.tanh(x) + alpha * x
 
 
 class IVAE(nn.Module):
@@ -65,33 +35,25 @@ class IVAE(nn.Module):
     latent_dim: int
     aux_dim: int
     n_layers: int = 3
-    activation: str = 'xtanh'
+    activation: Callable = lambda x: nn.leaky_relu(x, negative_slope=.1)
     hidden_dim: int = 50
-    slope: float = .1
 
     def setup(self):
         _, self.key = jax.random.split(self.OP_key, 2)
 
         # prior params
         self.prior_mean = jnp.zeros(1)
-        self.logl = MLP(self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers, activation=self.activation,
-                        slope=self.slope)
+        self.logl = MLP(self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers, self.activation)
         # decoder params
-        self.f = MLP(self.latent_dim, self.data_dim, self.hidden_dim, self.n_layers, activation=self.activation,
-                     slope=self.slope)
+        self.f = MLP(self.latent_dim, self.data_dim, self.hidden_dim, self.n_layers, self.activation)
         self.decoder_var = .1 * jnp.ones(1)
         # encoder params
-        self.g = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers,
-                     activation=self.activation, slope=self.slope)
-        self.logv = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers,
-                        activation=self.activation, slope=self.slope)
-
-    def __call__(self):
-        return self
+        self.g = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers, self.activation)
+        self.logv = MLP(self.data_dim + self.aux_dim, self.latent_dim, self.hidden_dim, self.n_layers, self.activation)
 
     @staticmethod
     def reparameterize(key, mean, var):
-        eps = jax.random.normal(key=key, shape=var.shape)
+        eps = jax.random.normal(key=key, shape=mean.shape)
         std = jnp.sqrt(var)
         return mean + std * eps
 
@@ -109,29 +71,12 @@ class IVAE(nn.Module):
         logl = self.logl(u)
         return logl.exp()
 
-    def forward(self, x, u):
+    def __call__(self, key, x, u):
         l = self.prior(u)
         g, v = self.encoder(x, u)
-        key1, self.key = jax.random.split(self.key, 2)
-        s = self.reparameterize(key1, g, v)
+        s = self.reparameterize(key, g, v)
         f = self.decoder(s)
         return f, g, v, s, l
-
-    # @partial(jax.jit, static_argnums=(3, 4, 5, 6, 7))
-    @partial(jax.value_and_grad, argnums=[1, 2], has_aux=True)
-    def elbo(self, x, u, N, a=1., b=1., c=1., d=1.):
-        f, g, v, z, l = self.forward(x, u)
-        M, d_latent = z.size()
-        logpx = logdensity_normal(x, f, self.decoder_var).sum(dim=-1)
-        logqs_cux = logdensity_normal(z, g, v).sum(dim=-1)
-        logps_cu = logdensity_normal(z, None, l).sum(dim=-1)
-
-        logqs_tmp = logdensity_normal(z.reshape(M, 1, d_latent), g.reshape(1, M, d_latent), v.reshape(1, M, d_latent))
-        logqs = jnp.logaddexp(logqs_tmp.sum(dim=-1), dim=1, keepdim=False) - jnp.log(M * N)
-        logqs_i = (jnp.logaddexp(logqs_tmp, dim=1, keepdim=False) - jnp.log(M * N)).sum(dim=-1)
-
-        elbo = -jnp.mean((a * logpx - b * (logqs_cux - logqs) - c * (logqs - logqs_i) - d * (logqs_i - logps_cu)))
-        return elbo, z
 
 
 class Dist:

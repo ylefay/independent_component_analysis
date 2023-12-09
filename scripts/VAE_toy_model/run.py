@@ -2,6 +2,7 @@ from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framewor
 from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import DataSet
 import jax.numpy as jnp
 import jax
+import flax.linen as nn
 
 
 def main():
@@ -12,7 +13,7 @@ def main():
 
     model_cfg = {
         'n_layers': 3,
-        'activation': 'xtanh',
+        'activation': lambda x: nn.tanh(x) + 0.1 * x,
         'hidden_dim': 100}
     learning_cfg = {
         'a': 100,
