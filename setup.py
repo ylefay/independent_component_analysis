@@ -24,6 +24,8 @@ setuptools.setup(
         "numpy>=1.24.3",
         "tqdm",
         "blackjax",
+        "flax",
+        "optax",
     ],
     long_description_content_type="text/markdown",
     keywords="probabilistic graphical models generative models component analysis variational autoencoder nonlinear model",

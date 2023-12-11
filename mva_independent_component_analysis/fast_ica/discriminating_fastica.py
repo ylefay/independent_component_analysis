@@ -36,7 +36,7 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     :param n_components: number of desired components
     :param tol: tolerance for the stopping criterion
     :param max_iter: maximum number of iterations for each component
-    :return: matrix of shape (n_features, n_components) containing the components
+    :return: matrix of shape (n_components, n_features) containing the components
     """
     n_features, n_samples = X.shape
     if n_components is None:

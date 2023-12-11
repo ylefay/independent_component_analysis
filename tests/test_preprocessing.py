@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.preprocessing import centering, whitening
+from mva_independent_component_analysis.utils import centering, whitening
 import numpy.testing as npt
 
 
@@ -19,7 +19,7 @@ def test_whitened_data():
     mean = jax.random.uniform(JAX_KEY, (n_features, 1), minval=min_mean, maxval=max_mean)
     std = jax.random.uniform(JAX_KEY, (n_features, 10 * n_features), minval=jnp.sqrt(min_std),
                              maxval=jnp.sqrt(max_std))
-    std = std @ std.T / (10 * n_features)  # scaling to avoid numerical issues
+    std = std @ std.T / (10 * n_features)
 
     _, key_samples = jax.random.split(JAX_KEY, 2)
     X = mean + std @ jax.random.normal(key_samples, (n_features, n_samples))
