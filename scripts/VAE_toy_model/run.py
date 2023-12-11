@@ -6,9 +6,9 @@ import flax.linen as nn
 
 
 def main():
-    OP_key = jax.random.PRNGKey(1337)
+    OP_key = jax.random.PRNGKey(1488)
 
-    dataset = jnp.load("./data/data.npz")
+    dataset = jnp.load("./data/tcl_1000_40_5_5_3_1_gauss_xtanh.npz")
     dataset = DataSet(dataset)
 
     model_cfg = {
@@ -21,8 +21,8 @@ def main():
         'c': 0,
         'd': 10,
         'lr': 1e-2,
-        'batch_size': 10,
-        'epochs': 10,
+        'batch_size': 64,
+        'epochs': 100,
     }
 
     train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg)

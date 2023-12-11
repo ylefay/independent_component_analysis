@@ -13,19 +13,20 @@ def main():
     OP_key = jax.random.PRNGKey(1337)
 
     generation_kwargs = {
-        'n_per_seg': 40,  # M in the paper
-        'n_seg': 10,  # L in the paper 4000
-        'n_components': 10,  # n in the paper
-        'n_features': 40,  # d in the paper
+        'n_per_seg': 1000,  # M in the paper
+        'n_seg': 40,  # L in the paper 4000
+        'n_components': 5,  # n in the paper
+        'n_features': 5,  # d in the paper
+        'n_layers': 3,
         'prior': 'gauss',  # k=2
-        'activation': 'lrelu',
-        'noisy': 0.0,  # noiseless model
+        'activation': lambda x: jnp.tanh(x) + 0.1 * x,
+        'noise': 0.0,  # noiseless model
         'staircase': False
     }
 
     path = "./data/"
     S, X, U, M, L = generate_data(OP_key=OP_key, **generation_kwargs)
-    jnp.savez(path + "data.npz", S=S, X=X, U=U, M=M, L=L)
+    jnp.savez(path + "data.npz", s=S, x=X, u=U, m=M, L=L)
 
 
 if __name__ == "__main__":

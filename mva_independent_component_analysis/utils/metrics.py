@@ -1,7 +1,8 @@
 import jax.numpy as jnp
 import jax
-from scipy.optimize import linear_sum_assignment
+from mva_independent_component_analysis.utils.linear_sum_assignement import linear_sum_assignment
 from scipy.stats import spearmanr
+from functools import partial
 
 
 def ratio(S_est, S):

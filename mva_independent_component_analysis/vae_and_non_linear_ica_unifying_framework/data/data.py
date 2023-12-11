@@ -83,8 +83,8 @@ def generate_nonstationary_sources(OP_key, n_per_seg, n_seg, d, prior='gauss', v
     return sources, labels, m, L
 
 
-def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_layers=4, prior='gauss',
-                  activation='lrelu', slope=.1, var_lb=0.5, var_ub=3, lin_type='uniform', n_iter_4_cond=100, noisy=0,
+def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_layers=3, prior='gauss',
+                  activation=nn.leaky_relu, var_lb=0.5, var_ub=3, lin_type='uniform', n_iter_4_cond=1000, noise=0,
                   uncentered=False, centers=None, staircase=False, repeat_linearity=False):
     """
     Generate artificial data with arbitrary mixing of latent variables
@@ -96,13 +96,12 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
     :param n_features: int, number (dimension) of signals
     :param n_layers: int, number of layers in the mixing MLP
     :param prior: str, distribution of the sources. can be `lap` for Laplace , `hs` for Hypersecant or `gauss` for Gaussian
-    :param activation: str or callable, activation function for the mixing MLP, can be `lrelu` for leaky ReLU or `xtanh` for id + tanh, or 'sigmoid'
-    :param slope: float, slope for the activation function
+    :param activation: callable, activation function for the mixing MLP, can be `lrelu` for leaky ReLU or `xtanh` for id + tanh, or 'sigmoid'
     :param var_lb: float, lower bound for the modulation parameter
     :param var_ub: float, upper bound for the modulation parameter
     :param lin_type: str, type of linearity for the mixing MLP, can be `uniform` for uniform or `orthogonal` for normal
     :param n_iter_4_cond: int, required number of iterations for the condition number of the mixing matrix, see mixing_matrix.py
-    :param noisy: float, noise level
+    :param noise: float, noise level
     :param uncentered: see generate_nonstationary_sources
     :param centers: see generate_nonstationary_sources
     :param staircase: see generate_nonstationary_sources
@@ -120,16 +119,7 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
                                                 var_lb=var_lb, var_ub=var_ub,
                                                 uncentered=uncentered, centers=centers, staircase=staircase)
     # non linearity
-    if activation == 'lrelu':
-        act_f = lambda x: nn.leaky_relu(x, slope)
-    elif activation == 'sigmoid':
-        act_f = nn.sigmoid
-    elif activation == 'xtanh':
-        act_f = lambda x: jnp.tanh(x) + slope * x
-    elif activation == 'none':
-        act_f = lambda x: x
-    elif isinstance(activation, Callable):
-        act_f = activation
+    act_f = activation
 
     if not repeat_linearity:
         X = S.copy()
@@ -162,9 +152,9 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
                 X = act_f(X @ B)
 
     # add noise:
-    if noisy:
+    if noise:
         key1, key = jax.random.split(key, 2)
-        X += noisy * jax.random.normal(key1, X.shape)
+        X += noise * jax.random.normal(key1, X.shape)
 
     U = jax.nn.one_hot([U], num_classes=n_seg)[0]
     return S, X, U, M, L
@@ -177,11 +167,11 @@ class DataSet():
 
     def __init__(self, data):
         self.data = data.f
-        self.s = jnp.asarray(self.data.S)
-        self.x = jnp.asarray(self.data.X)
-        self.u = jnp.asarray(self.data.U)
+        self.s = jnp.asarray(self.data.s)
+        self.x = jnp.asarray(self.data.x)
+        self.u = jnp.asarray(self.data.u)
         self.l = jnp.asarray(self.data.L)
-        self.m = jnp.asarray(self.data.M)
+        self.m = jnp.asarray(self.data.m)
         self.len = self.x.shape[0]
         self.latent_dim = self.s.shape[1]
         self.aux_dim = self.u.shape[1]

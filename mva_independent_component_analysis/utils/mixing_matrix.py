@@ -27,7 +27,7 @@ def generate_mixing_matrix(OP_key, n_components, n_features=None, lin_type='unif
 
     sq = n_features > 2
 
-    @partial(jax.jit, static_argnums=(1, 2, 3))
+    @partial(jax.jit, static_argnums=(1, 2))
     def _gen_matrix_staircase(key, ds, dd):
         A1 = jnp.zeros((ds, 1))  # first row of A should be e_1
         A1 = A1.at[0, 0].set(1)
