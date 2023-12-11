@@ -33,7 +33,7 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
     lr = learning_cfg.pop('lr', 1e-2)
     batch_size = learning_cfg.pop('batch_size', 64)
     epochs = learning_cfg.pop('epochs', 100)
-    # fixed noise sigma^2Id
+    # fixed Gaussian noise: \varepsilon ~ N(0, sigma^2Id)
     var_decoder = 0.1
 
     N = dataset.len
@@ -58,6 +58,7 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
         """
         See: https://flax.readthedocs.io/en/latest/guides/flax_fundamentals/state_params.html
              https://github.com/ilkhem/iVAE
+             Assuming z \mid u Gaussian-prior.
         """
 
         def batch_loss(params):

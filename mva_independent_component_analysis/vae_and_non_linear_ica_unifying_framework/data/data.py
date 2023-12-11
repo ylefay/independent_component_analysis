@@ -1,6 +1,7 @@
 """
 Generate artificial data with arbitrary mixing with latent variables
 Non-stationary sources are generated following a TCL distribution.
+See: https://github.com/ilkhem/iVAE/blob/master/data/data.py.
 """
 
 import jax
@@ -8,8 +9,6 @@ import jax.numpy as jnp
 from flax import linen as nn
 import scipy
 from scipy.stats import hypsecant
-from typing import Callable
-
 from mva_independent_component_analysis.utils.mixing_matrix import generate_mixing_matrix
 
 

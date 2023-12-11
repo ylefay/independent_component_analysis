@@ -5,6 +5,9 @@ from typing import Callable
 
 
 class MLP(nn.Module):
+    """
+    Standard multi-layer perceptron.
+    """
     input_dim: int
     output_dim: int
     hidden_dim: int
@@ -28,6 +31,9 @@ class MLP(nn.Module):
 
 
 class IVAE(nn.Module):
+    """
+    IVAE model, implementation based upon https://github.com/ilkhem/iVAE/blob/master/models/nets.py.
+    """
     data_dim: int
     latent_dim: int
     aux_dim: int

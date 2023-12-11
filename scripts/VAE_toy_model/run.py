@@ -8,7 +8,7 @@ import flax.linen as nn
 def main():
     OP_key = jax.random.PRNGKey(1488)
 
-    dataset = jnp.load("./data/tcl_1000_40_5_5_3_1_gauss_xtanh.npz")
+    dataset = jnp.load("./data/data.npz")
     dataset = DataSet(dataset)
 
     model_cfg = {

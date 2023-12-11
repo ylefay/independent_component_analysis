@@ -6,7 +6,8 @@ from functools import partial
 def generate_mixing_matrix(OP_key, n_components, n_features=None, lin_type='uniform', cond_threshold=25,
                            n_iter_4_cond=None, staircase=False):
     """
-    Generate mixing matrix
+    Generate mixing matrix.
+    See: https://github.com/ilkhem/iVAE/blob/master/data/data.py
     :param OP_key:
     :param n_components: number of sources
     :param n_features: number of signals
