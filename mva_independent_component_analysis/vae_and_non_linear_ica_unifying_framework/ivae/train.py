@@ -49,7 +49,7 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
     variables = model.init(key, key=key1, x=jnp.empty(x_shape), u=jnp.empty(u_shape))
     state, params = flax.core.pop(variables, 'params')
     del variables
-    scheduler = piecewise_constant_schedule(lr, {int(0.2 * epochs): 0.1, int(0.5 * epochs): 0.1})
+    scheduler = piecewise_constant_schedule(lr, {int(0.8 * epochs): 0.8})
     optimizer = adam(scheduler)
     opt_state = optimizer.init(params)
     batch_keys = jax.random.split(key, n)
@@ -57,6 +57,7 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
     def train_step(state, opt_state, params, z_rng_batch, x_batch, u_batch, a, b, c, d):
         """
         See: https://flax.readthedocs.io/en/latest/guides/flax_fundamentals/state_params.html
+             https://github.com/ilkhem/iVAE
         """
 
         def batch_loss(params):
@@ -78,11 +79,12 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
                     (a * logpx - b * (logqs_cux - logqs) - c * (logqs - logqs_i) - d * (logqs_i - logps_cu)))
                 return elbo, z
 
-            loss, updated_state = jax.vmap(loss_fn, in_axes=(0, 0, 0))(z_rng_batch, x_batch, u_batch)
+            loss, updated_state = jax.vmap(loss_fn, out_axes=(0, 0))(z_rng_batch, x_batch,
+                                                                     u_batch)  # out_axes = (0, None)?
             return loss.mean(), updated_state
 
         (loss, updated_state), grads = jax.value_and_grad(
-            batch_loss, has_aux=True
+            batch_loss, has_aux=True,
         )(params)
         updates, opt_state = optimizer.update(grads, opt_state, params=params)
         params = optax.apply_updates(params, updates)
