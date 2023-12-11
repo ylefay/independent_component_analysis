@@ -37,8 +37,10 @@ def logdensity_normal(z, mu, var):
     :param var: variance
     :return: log-density
     """
-    if mu.shape != var.shape:
-        var = jax.lax.expand_dims(var, dimensions=mu.shape)
+    if isinstance(var, float):
+        var = jnp.ones_like(mu) * var
+    if isinstance(mu, float):
+        mu = jnp.ones_like(var) * mu
     return -0.5 * (jnp.log(2 * jnp.pi) + jnp.log(var) + (z - mu) ** 2 / var)
 
 

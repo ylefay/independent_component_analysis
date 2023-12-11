@@ -23,8 +23,6 @@ def main():
         'lr': 1e-2,
         'batch_size': 10,
         'epochs': 10,
-        'anneal': False,
-        'anneal_epoch': 20
     }
 
     train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg)
