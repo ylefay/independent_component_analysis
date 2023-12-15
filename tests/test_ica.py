@@ -81,5 +81,6 @@ def test_ica_identification(ica_implementation):
         mean = jnp.mean(ratio)
         std = jnp.std(ratio)  # very few but large outliers : over-estimated std
         ratio = ratio[(ratio - mean) / std < 1.25]
+        print(len(ratio) / 500)
         npt.assert_allclose(jnp.mean(ratio), 1,
                             atol=0.05)  # in average, the reconstructed signal should be equal to the original signal up to scaling

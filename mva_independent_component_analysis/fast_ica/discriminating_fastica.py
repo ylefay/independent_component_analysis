@@ -55,11 +55,12 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
         def minus(x):
             # g, dg = jax.value_and_grad(subgaussian)(x)
             # another criterion is x * g - dg > 0
-            return jnp.mean(x ** 4) - 3  # we use the kurtosis to discriminate.
+            # positive means super gaussian
+            return jnp.mean(x ** 4) - 3  # we use the kurtosis to discriminate between sub and super gaussian sources.
 
         return jax.lax.cond(minus(x) > 0,
-                            jax.vmap(jax.value_and_grad(subgaussian)),
                             jax.vmap(jax.value_and_grad(supergaussian)),
+                            jax.vmap(jax.value_and_grad(subgaussian)),
                             x
                             )
 
