@@ -31,10 +31,10 @@ def switching_criterion_kurtosis(y):
     return jnp.mean(y ** 4) - 3
 
 
-def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
-               learning_rate=0.0001, g=None):
+def gradient_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
+                 learning_rate=0.0001, g=None):
     """
-    Perform a Newton's descent on the log-likelihood of the ICA model.
+    Perform a Gradient descent on the log-likelihood of the ICA model.
     :param op_key:
     :param X: observed signals of shape (n_features, n_samples)
     :param n_components: number of desired components
@@ -55,9 +55,15 @@ def newton_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
         id = jnp.eye(n_components, n_components)
         if g is None:
             sign_matrix = jnp.diag(jax.vmap(switching_criterion_kurtosis)(S))
-            dW = (id - 1 / n_samples * (sign_matrix @ jnp.tanh(S) + S) @ S.T) @ W
+            if n_components == n_features:
+                dW = (id - 1 / n_samples * (sign_matrix @ jnp.tanh(S) + S) @ S.T) @ W
+            else:
+                dW = jnp.linalg.inv(W @ W.T) @ W - 1 / n_samples * (sign_matrix @ jnp.tanh(S) + S) @ X.T
         else:
-            dW = (id - 1 / n_samples * jnp.sum(g(S), axis=1)) @ W
+            if n_components == n_features:
+                dW = (id - 1 / n_samples * g(S) @ S.T) @ W
+            else:
+                dW = jnp.linalg.inv(W @ W.T) @ W - 1 / n_samples * g(S) @ X.T
         return dW
 
     def cond(args):

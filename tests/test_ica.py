@@ -4,15 +4,15 @@ import jax.numpy as jnp
 from mva_independent_component_analysis.utils import centering_and_whitening, generate_mixing_matrix
 from mva_independent_component_analysis.fast_ica.fastica import fast_ica
 from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
-from mva_independent_component_analysis.mle_ica.newton import newton_ica, subgaussian, supergaussian
+from mva_independent_component_analysis.mle_ica.gradient import gradient_ica, subgaussian, supergaussian
 
 import numpy.testing as npt
 from scipy.signal import sawtooth
 import pytest
 from functools import partial
 
-ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, newton_ica, partial(newton_ica, g=subgaussian),
-        partial(newton_ica, g=supergaussian)]  # test does not pass on mle_fast_ica.
+ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, gradient_ica, partial(gradient_ica, g=subgaussian),
+        partial(gradient_ica, g=supergaussian)]  # test does not pass on mle_fast_ica.
 
 
 @pytest.mark.parametrize("ica_implementation", ICAs)
@@ -38,7 +38,7 @@ def test_fastica(ica_implementation):
 
 
 ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica,
-        newton_ica]  # still need to create a test for sub super gaussian priors
+        gradient_ica]  # still need to create a test for sub super gaussian priors
 
 
 @pytest.mark.parametrize("ica_implementation", ICAs)
@@ -58,8 +58,8 @@ def test_ica_identification(ica_implementation):
     # Whiten mixed signals
     X, meanX, whiteM = centering_and_whitening(X)
     # Running ICA
-    if newton_ica == ica_implementation:
-        max_iter = 500000 # newton ica is slower
+    if gradient_ica == ica_implementation:
+        max_iter = 500000  # gradient ica is slower
     else:
         max_iter = 5000
     W = ica_implementation(op_key=JAX_KEY, X=X, n_components=X.shape[0], tol=1e-8, max_iter=max_iter)
@@ -82,4 +82,4 @@ def test_ica_identification(ica_implementation):
         std = jnp.std(ratio)  # very few but large outliers : over-estimated std
         ratio = ratio[(ratio - mean) / std < 1.25]
         npt.assert_allclose(jnp.mean(ratio), 1,
-                            atol=0.2)  # in average, the reconstructed signal should be equal to the original signal up to scaling
+                            atol=0.05)  # in average, the reconstructed signal should be equal to the original signal up to scaling
