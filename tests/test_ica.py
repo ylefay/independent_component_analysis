@@ -52,7 +52,7 @@ def test_ica_identification(ica_implementation):
                    jax.random.uniform(JAX_KEY, shape=(len(ns),))])
     n_sources, n_samples = S.shape
     # Mixing process
-    A = generate_mixing_matrix(JAX_KEY, n_sources, n_sources, n_iter_4_cond=None)
+    A = generate_mixing_matrix(JAX_KEY, n_sources, n_sources+1, n_iter_4_cond=None).T
     # Mixed signals
     X = A @ S
     # Whiten mixed signals

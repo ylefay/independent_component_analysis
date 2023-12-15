@@ -15,7 +15,7 @@ def generate_mixing_matrix(OP_key, n_components, n_features=None, lin_type='unif
     :param cond_threshold: upper bound on the condition number of the matrix to avoid ill-posed problem
     :param n_iter_4_cond: ignore cond_treshold, compute n_iter_4_cond matrix and accept low conditioned matrix
     :param staircase: if True, generate mixing that preserves staircase form of sources
-    :return: mixing matrix of shape (n_components, n_features)
+    :return: mixing matrix of shape (n_components, n_features) #BEWARE: A.T @ S not A @ S in that case!!
     """
 
     key, key1 = jax.random.split(OP_key, 2)
