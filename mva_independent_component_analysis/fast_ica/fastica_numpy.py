@@ -1,5 +1,5 @@
 import numpy as np
-from mva_independent_component_analysis.utils.metrics import mean_corr_coef
+from mva_independent_component_analysis.utils.metrics import fast_corr_coef
 
 def fast_ica(signals,  alpha = 1, thresh=1e-8, iterations=5000,true_sources=None):
     m, n = signals.shape #(m,n)
@@ -44,8 +44,8 @@ def fast_ica(signals,  alpha = 1, thresh=1e-8, iterations=5000,true_sources=None
                 if true_sources is not None:
                   W_hat[c, :] = w_
                   unMixed_hat=W_hat @ signals
-                  print(f'----- MCC = {mean_corr_coef(true_sources,unMixed_hat)[0]}')
-                  mcc.append(mean_corr_coef(true_sources,unMixed_hat)[0])
+                  print(f'----- MCC = {fast_corr_coef(true_sources,unMixed_hat)}')
+                  mcc.append(fast_corr_coef(true_sources,unMixed_hat))
 
                 if distance < thresh:
                   break
