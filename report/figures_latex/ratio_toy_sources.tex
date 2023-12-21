@@ -1,0 +1,30 @@
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    title={Ratio signals},
+    xlabel={Sample number},
+    ylabel={},
+    xmin=0, xmax=1000,
+    ymin=-1.5, ymax=1.5,
+    legend pos=north east,
+    xmajorgrids=true,
+    ymajorgrids=true,
+    grid style=dashed,
+    width=\textwidth,
+    height=8cm,
+    label style={font=\large},
+    title style={font=\Large},
+]
+\addplot[color=blue, no marks] table {data/ratio_toy_sources_1.dat};
+    \addlegendentry{Recovered signals 1}
+\addplot[color=blue, no marks] table {data/ratio_toy_sources_2.dat};
+    \addlegendentry{Recovered signals 2}
+\addplot[color=blue, no marks] table {data/ratio_toy_sources_3.dat};
+    \addlegendentry{Recovered signals 3}
+
+\end{axis}
+\end{tikzpicture}
+\caption{Plot of ratio signals for each source.}
+\end{figure}
