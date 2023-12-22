@@ -71,8 +71,12 @@ class IVAE(nn.Module):
         logl = self.logl(u)
         return jnp.exp(logl)
 
-    def __call__(self, key, x, u):
+    def __call__(self, key, x, u, z=None, decoder=False):
+        if decoder:
+            f=self.decoder(z)
+            return f
         l = self.prior(u)
+
         g, v = self.encoder(x, u)
         s = self.reparameterize(key, g, v)
         f = self.decoder(s)
