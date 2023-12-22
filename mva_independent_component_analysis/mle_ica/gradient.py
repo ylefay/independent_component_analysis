@@ -37,7 +37,7 @@ def gradient_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
     Perform a Gradient descent on the log-likelihood of the ICA model.
     :param op_key:
     :param X: observed signals of shape (n_features, n_samples)
-    :param n_components: number of desired components
+    :param n_components: number of desired components / sources
     :param tol: tolerance for the Gradient's step size, used as a stopping criterion
     :param max_iter: maximum number of iterations, used as a stopping criterion
     :param learning_rate: learning rate for the Newton's descent
