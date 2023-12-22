@@ -90,10 +90,13 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
         updates, opt_state = optimizer.update(grads, opt_state, params=params)
         params = optax.apply_updates(params, updates)
         return opt_state, params, updated_state, loss
-
+    
+    mcc_scores=[]
     for epoch in range(epochs):
         opt_state, params, state, loss = train_step(state, opt_state, params, batch_keys, batches[0], batches[2],
                                                     **learning_cfg)
         mean_corr_coeffs, _ = jax.vmap(mean_corr_coef, in_axes=(0, 0))(state, batches[1])
         mean_corr_coeff = jnp.mean(mean_corr_coeffs)
         print(f"Epoch: {epoch}; Loss: {loss}; Mean correlation coefficient: {mean_corr_coeff}")
+        mcc_scores.append(mean_corr_coeff)
+    return mcc_scores

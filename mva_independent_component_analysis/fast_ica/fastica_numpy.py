@@ -27,7 +27,7 @@ def fast_ica(signals,  alpha = 1, thresh=1e-8, iterations=5000,true_sources=None
                 g_wTx = (1 - np.square(np.tanh(wTx))) * alpha #(n,1)
 
                 # Update weights
-                w_ = (signals * gwTx.T).mean(axis=1) - g_wTx.mean() * w.squeeze()
+                w_ = (signals @ gwTx)/n- g_wTx.mean() * w.squeeze()
 
                 # Decorrelate weights
                 w_ = w_ - np.dot(np.dot(w_, W[:c].T), W[:c])
