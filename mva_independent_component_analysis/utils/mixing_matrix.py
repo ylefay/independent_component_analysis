@@ -1,6 +1,7 @@
-import jax.numpy as jnp
-import jax
 from functools import partial
+
+import jax
+import jax.numpy as jnp
 
 
 def generate_mixing_matrix(OP_key, n_components, n_features=None, lin_type='uniform', cond_threshold=25,

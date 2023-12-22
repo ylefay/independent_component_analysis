@@ -1,15 +1,15 @@
+from functools import partial
+
 import jax
 import jax.numpy as jnp
-
-from mva_independent_component_analysis.utils import centering_and_whitening, generate_mixing_matrix
-from mva_independent_component_analysis.fast_ica.fastica import fast_ica
-from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
-from mva_independent_component_analysis.mle_ica.gradient import gradient_ica, subgaussian, supergaussian
-
 import numpy.testing as npt
-from scipy.signal import sawtooth
 import pytest
-from functools import partial
+from scipy.signal import sawtooth
+
+from mva_independent_component_analysis.fast_ica.discriminating_fastica import fast_ica as discriminating_fast_ica
+from mva_independent_component_analysis.fast_ica.fastica import fast_ica
+from mva_independent_component_analysis.mle_ica.gradient import gradient_ica, subgaussian, supergaussian
+from mva_independent_component_analysis.utils import centering_and_whitening, generate_mixing_matrix
 
 ICAs = [partial(fast_ica, fun=jnp.tanh), discriminating_fast_ica, gradient_ica, partial(gradient_ica, g=subgaussian),
         partial(gradient_ica, g=supergaussian)]  # test does not pass on mle_fast_ica.
@@ -79,7 +79,7 @@ def test_ica_identification(ica_implementation):
         mean = jnp.mean(ratio)
         ratio = ratio[(ratio - mean) / std < 1.25]
         mean = jnp.mean(ratio)
-        std = jnp.std(ratio)  # very few but large outliers : over-estimated std
+        std = jnp.std(ratio)  # very few but large outliers (when the signal cross 0) : over-estimated std
         ratio = ratio[(ratio - mean) / std < 1.25]
         npt.assert_allclose(jnp.mean(ratio), 1,
                             atol=0.1)  # in average, the reconstructed signal should be equal to the original signal up to scaling

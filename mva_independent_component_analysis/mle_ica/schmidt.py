@@ -6,7 +6,9 @@ def gs(A):
     """
     Gram-Schmidt orthogonalization algorithm for non-square matrix.
     This function could be used in the FastICA algorithm, however, it would be non-optimal.
-    :return: semiorthogonal matrix
+    :return: semiorthogonal matrix: the rows form a orthonormal family.
+
+    Author: Yvann Le Fay
     """
     n, m = A.shape
 

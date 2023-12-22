@@ -37,6 +37,8 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
     :param tol: tolerance for the stopping criterion
     :param max_iter: maximum number of iterations for each component
     :return: matrix of shape (n_components, n_features) containing the components
+
+    Author: Yvann Le Fay
     """
     n_features, n_samples = X.shape
     if n_components is None:
@@ -52,13 +54,12 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, max_iter=10 ** 5):
             appropriate derivative of log-density for x depending on estimated sub or super-gaussianity of x.
         """
 
-        def minus(x):
+        def switching_criterion(x):
             # g, dg = jax.value_and_grad(subgaussian)(x)
             # another criterion is x * g - dg > 0
-            # positive means super gaussian
-            return jnp.mean(x ** 4) - 3  # we use the kurtosis to discriminate between sub and super gaussian sources.
+            return jnp.mean(x ** 4) - 3
 
-        return jax.lax.cond(minus(x) > 0,
+        return jax.lax.cond(switching_criterion(x) > 0,
                             jax.vmap(jax.value_and_grad(supergaussian)),
                             jax.vmap(jax.value_and_grad(subgaussian)),
                             x

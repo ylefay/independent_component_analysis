@@ -1,6 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
 from mva_independent_component_analysis.utils.preprocessing import centering_and_whitening
+
 
 def normalise_sources(sources):
     m=max([max(source) for source in sources])

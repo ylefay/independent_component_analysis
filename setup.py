@@ -22,8 +22,6 @@ setuptools.setup(
         "jaxlib>=0.3.25",
         "pytest",
         "numpy>=1.24.3",
-        "tqdm",
-        "blackjax",
         "flax",
         "optax",
     ],

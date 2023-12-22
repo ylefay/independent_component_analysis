@@ -1,14 +1,13 @@
+import flax
+import jax
+import jax.numpy as jnp
 import optax
+
 from mva_independent_component_analysis.utils.math import logaddexp
 from mva_independent_component_analysis.utils.metrics import mean_corr_coef
-from .nets import IVAE
-from optax import adam
-from optax import piecewise_constant_schedule
 from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import DataSet
-import jax.numpy as jnp
-import jax
 from .exponential_family import logdensity_normal
-import flax
+from .nets import IVAE
 
 
 def create_batch(OP_key, dataset, batch_size):
@@ -24,6 +23,11 @@ def create_batch(OP_key, dataset, batch_size):
 
 
 def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
+    """
+    Train and evaluate the IVAE model on the given dataset.
+
+    Author: Yvann Le Fay.
+    """
     assert isinstance(dataset, DataSet)
 
     data_dim, latent_dim, aux_dim = dataset.get_dims()
@@ -49,8 +53,8 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
     variables = model.init(key, key=key1, x=jnp.empty(x_shape), u=jnp.empty(u_shape))
     state, params = flax.core.pop(variables, 'params')
     del variables
-    scheduler = piecewise_constant_schedule(lr, {int(0.8 * epochs): 0.8})
-    optimizer = adam(scheduler)
+    scheduler = optax.piecewise_constant_schedule(lr, {int(0.8 * epochs): 0.8})
+    optimizer = optax.adam(scheduler)
     opt_state = optimizer.init(params)
     batch_keys = jax.random.split(key, n)
 
@@ -90,8 +94,8 @@ def train_and_evaluate(OP_key, dataset, model_cfg, learning_cfg):
         updates, opt_state = optimizer.update(grads, opt_state, params=params)
         params = optax.apply_updates(params, updates)
         return opt_state, params, updated_state, loss
-    
-    mcc_scores=[]
+
+    mcc_scores = []
     for epoch in range(epochs):
         opt_state, params, state, loss = train_step(state, opt_state, params, batch_keys, batches[0], batches[2],
                                                     **learning_cfg)

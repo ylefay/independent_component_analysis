@@ -1,8 +1,9 @@
-from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.ivae import train_and_evaluate
-from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import DataSet
-import jax.numpy as jnp
-import jax
 import flax.linen as nn
+import jax
+import jax.numpy as jnp
+
+from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import DataSet
+from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.ivae import train_and_evaluate
 
 
 def main():

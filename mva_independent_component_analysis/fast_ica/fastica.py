@@ -1,5 +1,5 @@
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
 
 
 def fast_ica(op_key, X, n_components=None, tol=1e-2, fun=jnp.tanh, max_iter=10 ** 5):
@@ -11,6 +11,8 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, fun=jnp.tanh, max_iter=10 *
     :param fun: function used for the approximation of the negentropy
     :param max_iter: maximum number of iterations for each component
     :return: matrix of shape (n_components, n_features) containing the components
+
+    Author: Yvann Le Fay
     """
     n_features, n_samples = X.shape
     if n_components is None:
@@ -22,13 +24,13 @@ def fast_ica(op_key, X, n_components=None, tol=1e-2, fun=jnp.tanh, max_iter=10 *
 
     def iter_one_component(inp, key_i):
         component, W = inp
-        w_init = jax.random.uniform(key_i, (n_features,), minval=-1, maxval=1) #(p,)
+        w_init = jax.random.uniform(key_i, (n_features,), minval=-1, maxval=1)
         w_init = w_init / jnp.linalg.norm(w_init)
 
         def iter(inps):
             step, diff, w = inps
             old_w = w
-            fun_image, fun_p_img = jax.vmap(jax.value_and_grad(fun))(w.T @ X) #(1,p)(p,n)=(1,n)
+            fun_image, fun_p_img = jax.vmap(jax.value_and_grad(fun))(w.T @ X)
             w = 1 / n_samples * X @ fun_image.T - 1 / n_samples * fun_p_img @ jnp.ones((n_samples,)) * w
 
             @jax.vmap

@@ -6,9 +6,9 @@ See: https://github.com/ilkhem/iVAE/blob/master/data/data.py.
 
 import jax
 import jax.numpy as jnp
-from flax import linen as nn
 import scipy
-from scipy.stats import hypsecant
+from flax import linen as nn
+
 from mva_independent_component_analysis.utils.mixing_matrix import generate_mixing_matrix
 
 
@@ -86,7 +86,7 @@ def generate_data(OP_key, n_per_seg, n_seg, n_components, n_features=None, n_lay
                   activation=nn.leaky_relu, var_lb=0.5, var_ub=3, lin_type='uniform', n_iter_4_cond=1000, noise=0,
                   uncentered=False, centers=None, staircase=False, repeat_linearity=False):
     """
-    Generate artificial data with arbitrary mixing of latent variables
+    Generate artificial data with arbitrary mixing of latent variables.
 
     :param OP_key: jax.random.PRNGKey
     :param n_per_seg: int, number of points per segment

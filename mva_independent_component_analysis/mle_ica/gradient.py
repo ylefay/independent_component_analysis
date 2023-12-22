@@ -1,5 +1,6 @@
 import jax
 import jax.numpy as jnp
+
 from .schmidt import gs_sampling, gs
 
 
@@ -45,6 +46,8 @@ def gradient_ica(op_key, X, n_components=None, tol=1e-8, max_iter=10 ** 5,
     If g is none, we use the kurtosis as a criterion to discriminate between sub and supergaussian sources,
     with supergaussian and subgaussian functions previously defined.
     :return: W, the estimated mixing matrix of shape (n_components, n_features)
+
+    Author: Yvann Le Fay & Zineb Bentires
     """
     n_features, n_samples = X.shape
     if n_components is None:

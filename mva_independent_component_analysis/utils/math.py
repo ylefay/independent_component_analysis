@@ -1,6 +1,7 @@
-import jax.numpy as jnp
-import jax
 from functools import partial
+
+import jax
+import jax.numpy as jnp
 
 
 @partial(jax.jit, static_argnums=[1])

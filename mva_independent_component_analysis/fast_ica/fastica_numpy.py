@@ -1,8 +1,13 @@
 import numpy as np
+
 from mva_independent_component_analysis.utils.metrics import fast_corr_coef
 
 
 def fast_ica(signals, alpha=1, thresh=1e-8, iterations=5000, true_sources=None):
+    """
+    FastICA algorithm implemented in Numpy.
+    Author: Nour Bentires.
+    """
     m, n = signals.shape  # (m,n)
 
     # Initialize random weights

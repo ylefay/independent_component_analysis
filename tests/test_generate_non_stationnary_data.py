@@ -1,10 +1,11 @@
 import jax
 import jax.numpy as jnp
-from flax import linen as nn
 import numpy.testing as npt
+import pytest
+from flax import linen as nn
+
 from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import generate_data, \
     generate_nonstationary_sources
-import pytest
 
 PRIORS = ['lap', 'hs', 'gauss']
 ACTIVATIONS = ['lrelu', 'sigmoid', 'xtanh', 'none', lambda x: nn.relu(x)]
