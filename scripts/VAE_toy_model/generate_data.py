@@ -14,8 +14,8 @@ def main():
     OP_key = jax.random.PRNGKey(1337)
 
     generation_kwargs = {
-        'n_per_seg': 1000,  # M in the paper
-        'n_seg': 40,  # L in the paper 4000
+        'n_per_seg': 1000,  # l in the paper
+        'n_seg': 40,  # M in the paper 4000
         'n_components': 5,  # n in the paper
         'n_features': 5,  # d in the paper
         'n_layers': 3,
