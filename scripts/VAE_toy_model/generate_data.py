@@ -4,9 +4,10 @@ Variational Autoencoders and Nonlinear ICA: A Unifying Framework
 https://arxiv.org/pdf/1907.04809.pdf
 """
 
-from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import generate_data
-import jax.numpy as jnp
 import jax
+import jax.numpy as jnp
+
+from mva_independent_component_analysis.vae_and_non_linear_ica_unifying_framework.data import generate_data
 
 
 def main():

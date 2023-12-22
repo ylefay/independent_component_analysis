@@ -1,4 +1,3 @@
-import jax.lax
 import jax.numpy as jnp
 
 
@@ -13,6 +12,8 @@ def logdensity_ef(z, u, T, A, L):
     :param T: sufficient statistics
     :param A: log-partition function
     :return: log-density
+
+    Author: Yvann Le Fay
     """
     return jnp.einsum('ij,ji->', T(z), L(u)) - jnp.einsum('i->', A(u))
 
@@ -24,6 +25,8 @@ def logdensity_univ_normal(z_scalar, mu, sigma):
     :param mu: mean
     :param sigma: standard deviation
     :return: log-density
+
+    Author: Yvann Le Fay
     """
     return logdensity_multivariate_normal(z_scalar, mu.reshape(1, ), sigma.reshape((1, 1)))
 
@@ -36,6 +39,8 @@ def logdensity_normal(z, mu, var):
     :param mu: mean
     :param var: variance
     :return: log-density
+
+    Author: Yvann Le Fay
     """
     if isinstance(var, float):
         var = jnp.ones_like(mu) * var
@@ -52,6 +57,8 @@ def logdensity_multivariate_normal(z, mu, sigma):
     :param mu: mean vector
     :param sigma: diagonal variance matrix
     :return: log-density
+
+    Author: Yvann Le Fay
     """
     sigma = jnp.diag(sigma)
     assert jnp.all(sigma > 0)
@@ -74,5 +81,7 @@ def logdensity_laplace_distribution_univ(x, mu, b):
     :param mu: mean
     :param b: scale
     :return: log-density
+
+    Author: Yvann Le Fay
     """
     return - jnp.log(2 * b) - jnp.abs(x - mu) / b

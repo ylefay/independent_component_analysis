@@ -1,11 +1,12 @@
-from mva_independent_component_analysis.utils import centering_and_whitening
-from mva_independent_component_analysis.fast_ica.fastica import fast_ica
-import pandas as pd
-import numpy as np
+import jax
+import jax.numpy as jnp
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import jax.numpy as jnp
-import jax
+import numpy as np
+import pandas as pd
+
+from mva_independent_component_analysis.fast_ica.fastica import fast_ica
+from mva_independent_component_analysis.utils import centering_and_whitening
 
 mpl.rcParams['figure.dpi'] = 1000
 OP_key = jax.random.PRNGKey(1337)

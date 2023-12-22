@@ -1,7 +1,8 @@
 import jax
 import jax.numpy as jnp
-from mva_independent_component_analysis.utils import centering, whitening
 import numpy.testing as npt
+
+from mva_independent_component_analysis.utils import centering, whitening
 
 
 def test_whitened_data():

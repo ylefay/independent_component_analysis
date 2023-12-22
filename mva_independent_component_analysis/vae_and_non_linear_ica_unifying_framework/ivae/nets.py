@@ -1,12 +1,14 @@
-from flax import linen as nn
-import jax.numpy as jnp
-import jax
 from typing import Callable
+
+import jax
+import jax.numpy as jnp
+from flax import linen as nn
 
 
 class MLP(nn.Module):
     """
     Standard multi-layer perceptron.
+    See: https://huggingface.co/flax-community/NeuralODE_SDE/blame/955a729c0c2041e2bae8c4b3a41e3dea922bda14/models/mlp.py
     """
     input_dim: int
     output_dim: int
@@ -32,7 +34,9 @@ class MLP(nn.Module):
 
 class IVAE(nn.Module):
     """
-    IVAE model, implementation based upon https://github.com/ilkhem/iVAE/blob/master/models/nets.py.
+    IVAE model, implementation built upon https://github.com/ilkhem/iVAE/blob/master/models/nets.py.
+
+    Author: Yvann Le Fay
     """
     data_dim: int
     latent_dim: int
@@ -73,7 +77,7 @@ class IVAE(nn.Module):
 
     def __call__(self, key, x, u, z=None, decoder=False):
         if decoder:
-            f=self.decoder(z)
+            f = self.decoder(z)
             return f
         l = self.prior(u)
 

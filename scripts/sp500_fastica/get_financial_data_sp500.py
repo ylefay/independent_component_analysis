@@ -1,6 +1,7 @@
-import urllib.request
-import pandas as pd
 import os.path
+import urllib.request
+
+import pandas as pd
 
 horizon = "oneYear"
 # Downloading the closing prices for the S&P500 index as well as the composing sectors
