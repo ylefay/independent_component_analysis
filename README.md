@@ -12,7 +12,7 @@ It includes:
   depending on the estimated (non)-Gaussianity of each source.
 - A Flax (Jax) implementation of identifiable Variational Autoencoder (iVAE) for ICA
 
-We advise the reader to read the full report avaiable [here](https://github.com/ylefay/mva_independent_component_analysis/report/pgm.pdf)
+Full report available at [here](https://github.com/ylefay/mva_independent_component_analysis/report/pgm.pdf)
 ## Audio Source Separation Using ICA
 
 Here are some audio samples of the source separation results:
